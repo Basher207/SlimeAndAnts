@@ -1,0 +1,21 @@
+#pragma kernel CSMain
+
+struct Ant {
+    float3 position;
+    float3 direction;
+    float speed;
+};
+
+RWStructuredBuffer<Ant> antBuffer;
+float time;
+float deltaTime;
+
+[numthreads(64,1,1)]
+void CSMain (uint3 id : SV_DispatchThreadID) {
+    Ant ant = antBuffer[id.x];
+
+    // Update ant position based on its direction and speed
+    ant.position += ant.direction * ant.speed * deltaTime;
+
+    antBuffer[id.x] = ant;
+}

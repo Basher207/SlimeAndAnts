@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &6246181766551158564
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6246181766551158566}
+  - component: {fileID: 6246181766551158561}
+  m_Layer: 0
+  m_Name: ComputeShaderController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6246181766551158566
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6246181766551158564}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6246181766551158561
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6246181766551158564}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 726d300b8b59d4b01bb76ec7c526087b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  textureMaterial: {fileID: 2100000, guid: 17cb5f369fdcd40e6aa9f56c486ac63a, type: 2}
+  antBehaviorShader: {fileID: 7200000, guid: 1060876ce504a4c6b946d5e5d71c0b72, type: 3}
+  drawAntsShader: {fileID: 7200000, guid: 493fbe911257942bab18625933e33ffa, type: 3}
+  diffuseTrailShader: {fileID: 7200000, guid: 5eaa7feff3f904cf889fe022e0664f94, type: 3}
+  numAnts: 200000
+  sensorAngle: 1.2
+  sensorScale: 1
+  rotationSpeed: 10
+  moveSpeed: 0.5
+  repulseScale: 0.2
+  attractionScale: 3.22
+  sensorDistance: 0.2
+  targetFrameRate: 60
+  antSpawnPerFrame: 5
+  currentNumberOfAnts: 200000

@@ -1,0 +1,48 @@
+#pragma kernel CSMain
+#pragma kernel RepulseTrail
+
+RWTexture2D<float4> trailMap;
+float2 mousePos;
+
+
+int2 WrapPixel(int2 pixel, int2 size)
+{
+    return (pixel+size) % size;
+}
+
+
+[numthreads(8,8,1)]
+void RepulseTrail (uint3 id : SV_DispatchThreadID)
+{
+    float distance = length(id.xy - mousePos);
+    float range = 500;
+    if (distance < range)
+        trailMap[id.xy] = float4(0,1,0,0) * (1-distance/range);
+}
+[numthreads(8,8,1)]
+void CSMain (uint3 id : SV_DispatchThreadID) {
+    int2 size;
+    trailMap.GetDimensions(size.x, size.y);
+    
+    float4 sum = float4(0, 0, 0, 0);
+    int count = 0;
+
+    // Average the color of the surrounding pixels
+    for (int dx = -1; dx <= 1; dx++) {
+        for (int dy = -1; dy <= 1; dy++) {
+            int2 pos = WrapPixel(id.xy + int2(dx, dy), size);
+            
+            sum += trailMap[pos];
+            count++;
+        }
+    }
+
+    float4 newColor = float4(1,1,1,1);
+    
+    newColor.r = lerp(trailMap[id.xy].r, sum.r / count, 0.3) * 0.99;
+    newColor.g = lerp(trailMap[id.xy].g, sum.g / count, 0.1) * 0.97;
+    newColor.b = lerp(trailMap[id.xy].b, sum.b / count, 0.3) * 0.994;
+
+    trailMap[id.xy] = newColor;
+    // Apply the average color
+}

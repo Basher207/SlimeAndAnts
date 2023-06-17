@@ -1,0 +1,35 @@
+#pragma kernel CSMain
+
+struct Ant {
+    float2 position;
+    float angle;
+};
+
+StructuredBuffer<Ant> antBuffer;
+RWTexture2D<float4> trailMap;
+int numAnts;
+int2 textureSize;
+
+float fmap(float value, float inMin, float inMax, float outMin, float outMax)
+{
+    return outMin + ((value - inMin) / (inMax - inMin)) * (outMax - outMin);
+}
+
+[numthreads(64,1,1)]
+void CSMain (uint3 id : SV_DispatchThreadID) {
+    if (id.x < numAnts) {
+        Ant ant = antBuffer[id.x];
+
+        // Convert normalized position to texture coordinates
+        int2 pos = (ant.position * 0.5f + 0.5f) * textureSize;
+        
+        // Draw the ant onto the trail map
+        float4 newColor = float4(1, 0.2, 0.02, 1);
+        // if (newColor.b > 0.8)
+        // {
+        //     newColor.r -= fmap(newColor.b, 0.8, 1, 0, 1);
+        // }
+        
+        trailMap[pos] += newColor; // white color
+    }
+}
