@@ -121,8 +121,8 @@ float RotateTowardsCentre(Ant ant) {
     // Compute the target angle using atan2, this gives us the angle from the ant to the centre
     float targetAngle = atan2(toCentre.y, toCentre.x);
 
-    float distanceForInwardsPressure = 0.8;
-    float inwardsPressure = fmap(distance, distanceForInwardsPressure, 1, 0, 0.08);
+    float distanceForInwardsPressure = 0.75;
+    float inwardsPressure = fmap(distance, distanceForInwardsPressure, 1, 0, 0.1);
     inwardsPressure = clamp(inwardsPressure, 0, 1);
     
     // Use the RotateTowards function to gradually rotate the ant towards the centre
@@ -144,8 +144,8 @@ void CSMain (uint3 id : SV_DispatchThreadID) {
     float distanceFromCenter = length(ant.position);
     float iDistanceFromCenter = 1 - distanceFromCenter;
 
-    ant.angle += time * rotationSpeed * (leftSensorVal - rightSensorVal) * idrunkness * fmap(distanceFromCenter, 0, 1, 0, 1);// / fmap(drunkness, 0, 1, 1, 5);// ? 1 : 0);
-    ant.angle += fmap(random01(id.x + 10, ant), 0, 1, -0.2, 0.2) * rotationSpeed * idrunkness * 0.1;
+    ant.angle += time * rotationSpeed * (leftSensorVal - rightSensorVal) * idrunkness * distanceFromCenter;// / fmap(drunkness, 0, 1, 1, 5);// ? 1 : 0);
+    ant.angle += fmap(random01(id.x + 10, ant), 0, 1, -0.2, 0.2) * rotationSpeed * idrunkness * 0.01;
 
     ant.angle = RotateTowardsCentre(ant);
     // float randomAngle = 2.0 * PI * random01(float2(time, ant.position.x + ant.position.y));
@@ -155,7 +155,7 @@ void CSMain (uint3 id : SV_DispatchThreadID) {
     
     // Apply movement
     float2 dir = float2(cos(ant.angle), sin(ant.angle));
-    ant.position += dir * time * moveSpeed * pow(fmap(drunkness, 0, 1, 1, 5), 2);
+    ant.position += dir * time * moveSpeed;// * pow(fmap(drunkness, 0, 1, 1, 5), 2);
     
     ant.position = WrapPosition(ant.position);
 

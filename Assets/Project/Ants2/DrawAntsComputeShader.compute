@@ -22,14 +22,15 @@ void CSMain (uint3 id : SV_DispatchThreadID) {
 
         // Convert normalized position to texture coordinates
         int2 pos = (ant.position * 0.5f + 0.5f) * textureSize;
+
+        float4 newColor = float4(1, 0.2, 0.02, 1);
+        
+        if (trailMap[pos].b > 0.8)
+        {
+            newColor.r -= fmap(newColor.b, 0.8, 1, 0, 1);
+        }
         
         // Draw the ant onto the trail map
-        float4 newColor = float4(1, 0.2, 0.02, 1);
-        // if (newColor.b > 0.8)
-        // {
-        //     newColor.r -= fmap(newColor.b, 0.8, 1, 0, 1);
-        // }
-        
         trailMap[pos] += newColor; // white color
     }
 }

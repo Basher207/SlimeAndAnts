@@ -406,6 +406,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 9115523779242747696, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
+      propertyPath: sensorDistance
+      value: 0.01
+      objectReference: {fileID: 0}
     - target: {fileID: 9115523779242747701, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
       propertyPath: m_Name
       value: ComputeShaderController
