@@ -224,6 +224,7 @@ MonoBehaviour:
   cubeSize: 16
   noiseScale: 0.5
   threshold: 0.5
+  triangleBudget: 1000000
 --- !u!1 &705507993
 GameObject:
   m_ObjectHideFlags: 0

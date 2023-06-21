@@ -5,6 +5,7 @@ PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
+    serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 6246181766551158561, guid: 53599673ca7444f31ae157790ab378a3, type: 3}
@@ -20,9 +21,17 @@ PrefabInstance:
       value: 0.4
       objectReference: {fileID: 0}
     - target: {fileID: 6246181766551158561, guid: 53599673ca7444f31ae157790ab378a3, type: 3}
+      propertyPath: numberOfAnts
+      value: 100000
+      objectReference: {fileID: 0}
+    - target: {fileID: 6246181766551158561, guid: 53599673ca7444f31ae157790ab378a3, type: 3}
       propertyPath: repulseScale
       value: 0.5
       objectReference: {fileID: 0}
+    - target: {fileID: 6246181766551158561, guid: 53599673ca7444f31ae157790ab378a3, type: 3}
+      propertyPath: computeShader
+      value: 
+      objectReference: {fileID: 7200000, guid: 1060876ce504a4c6b946d5e5d71c0b72, type: 3}
     - target: {fileID: 6246181766551158561, guid: 53599673ca7444f31ae157790ab378a3, type: 3}
       propertyPath: rotationSpeed
       value: 1
@@ -39,13 +48,97 @@ PrefabInstance:
       propertyPath: currentNumberOfAnts
       value: 100000
       objectReference: {fileID: 0}
+    - target: {fileID: 6246181766551158561, guid: 53599673ca7444f31ae157790ab378a3, type: 3}
+      propertyPath: materialToApplyTextureOn
+      value: 
+      objectReference: {fileID: 2100000, guid: 17cb5f369fdcd40e6aa9f56c486ac63a, type: 2}
+    - target: {fileID: 6246181766551158561, guid: 53599673ca7444f31ae157790ab378a3, type: 3}
+      propertyPath: shaderVariables.Array.size
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 6246181766551158561, guid: 53599673ca7444f31ae157790ab378a3, type: 3}
+      propertyPath: shaderVariables.Array.data[0].name
+      value: sensorAngle
+      objectReference: {fileID: 0}
+    - target: {fileID: 6246181766551158561, guid: 53599673ca7444f31ae157790ab378a3, type: 3}
+      propertyPath: shaderVariables.Array.data[1].name
+      value: sensorPixelWidth
+      objectReference: {fileID: 0}
+    - target: {fileID: 6246181766551158561, guid: 53599673ca7444f31ae157790ab378a3, type: 3}
+      propertyPath: shaderVariables.Array.data[2].name
+      value: rotationSpeed
+      objectReference: {fileID: 0}
+    - target: {fileID: 6246181766551158561, guid: 53599673ca7444f31ae157790ab378a3, type: 3}
+      propertyPath: shaderVariables.Array.data[3].name
+      value: moveSpeed
+      objectReference: {fileID: 0}
+    - target: {fileID: 6246181766551158561, guid: 53599673ca7444f31ae157790ab378a3, type: 3}
+      propertyPath: shaderVariables.Array.data[4].name
+      value: repulseScale
+      objectReference: {fileID: 0}
+    - target: {fileID: 6246181766551158561, guid: 53599673ca7444f31ae157790ab378a3, type: 3}
+      propertyPath: shaderVariables.Array.data[5].name
+      value: attractionScale
+      objectReference: {fileID: 0}
+    - target: {fileID: 6246181766551158561, guid: 53599673ca7444f31ae157790ab378a3, type: 3}
+      propertyPath: shaderVariables.Array.data[6].name
+      value: sensorDistance
+      objectReference: {fileID: 0}
+    - target: {fileID: 6246181766551158561, guid: 53599673ca7444f31ae157790ab378a3, type: 3}
+      propertyPath: shaderVariables.Array.data[0].value
+      value: 0.4
+      objectReference: {fileID: 0}
+    - target: {fileID: 6246181766551158561, guid: 53599673ca7444f31ae157790ab378a3, type: 3}
+      propertyPath: shaderVariables.Array.data[1].value
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6246181766551158561, guid: 53599673ca7444f31ae157790ab378a3, type: 3}
+      propertyPath: shaderVariables.Array.data[2].value
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6246181766551158561, guid: 53599673ca7444f31ae157790ab378a3, type: 3}
+      propertyPath: shaderVariables.Array.data[3].value
+      value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6246181766551158561, guid: 53599673ca7444f31ae157790ab378a3, type: 3}
+      propertyPath: shaderVariables.Array.data[4].value
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 6246181766551158561, guid: 53599673ca7444f31ae157790ab378a3, type: 3}
+      propertyPath: shaderVariables.Array.data[5].value
+      value: 3.22
+      objectReference: {fileID: 0}
+    - target: {fileID: 6246181766551158561, guid: 53599673ca7444f31ae157790ab378a3, type: 3}
+      propertyPath: shaderVariables.Array.data[6].value
+      value: 0.04
+      objectReference: {fileID: 0}
+    - target: {fileID: 6246181766551158561, guid: 53599673ca7444f31ae157790ab378a3, type: 3}
+      propertyPath: shaderVariables.Array.data[2].comment
+      value: How fast does ant rotate
+      objectReference: {fileID: 0}
+    - target: {fileID: 6246181766551158561, guid: 53599673ca7444f31ae157790ab378a3, type: 3}
+      propertyPath: shaderVariables.Array.data[3].comment
+      value: How fast does ant move
+      objectReference: {fileID: 0}
+    - target: {fileID: 6246181766551158561, guid: 53599673ca7444f31ae157790ab378a3, type: 3}
+      propertyPath: shaderVariables.Array.data[4].comment
+      value: Ant hates green how much?
+      objectReference: {fileID: 0}
+    - target: {fileID: 6246181766551158561, guid: 53599673ca7444f31ae157790ab378a3, type: 3}
+      propertyPath: shaderVariables.Array.data[5].comment
+      value: Ant loves red how much?
+      objectReference: {fileID: 0}
+    - target: {fileID: 6246181766551158561, guid: 53599673ca7444f31ae157790ab378a3, type: 3}
+      propertyPath: shaderVariables.Array.data[6].comment
+      value: How far away is the sensor from the ant
+      objectReference: {fileID: 0}
     - target: {fileID: 6246181766551158564, guid: 53599673ca7444f31ae157790ab378a3, type: 3}
       propertyPath: m_Name
-      value: ComputeShaderController 1
+      value: ComputeShaderController
       objectReference: {fileID: 0}
     - target: {fileID: 6246181766551158566, guid: 53599673ca7444f31ae157790ab378a3, type: 3}
       propertyPath: m_RootOrder
-      value: 0
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 6246181766551158566, guid: 53599673ca7444f31ae157790ab378a3, type: 3}
       propertyPath: m_LocalPosition.x
@@ -88,4 +181,7 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 53599673ca7444f31ae157790ab378a3, type: 3}
