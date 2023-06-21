@@ -266,17 +266,21 @@ void UpdateAnts (uint3 id : SV_DispatchThreadID) {
 
     //Get the ant
     Ant ant = antBuffer[id.x];
-    
+
+    //Drunkess of the ant prevents ants from being too close to other ants.
     float drunkness = trailMap[Helper_PositionToPixel(ant.position)].b;
     float idrunkness = 1 - drunkness;
+
+    //Left sensor and right sensor, 
     float leftSensorVal = sense(ant, sensorAngle) + random01(id.x, ant);
     float rightSensorVal = sense(ant, -sensorAngle) + random01(id.x, ant);
     //
     float distanceFromCenter = length(ant.position);
-    float iDistanceFromCenter = 1 - distanceFromCenter;
-    //
+    
     ant.angle += time * rotationSpeed * (leftSensorVal - rightSensorVal) * idrunkness * fmap(distanceFromCenter, 0, 1, 0, 1);// / fmap(drunkness, 0, 1, 1, 5);// ? 1 : 0);
-    ant.angle += fmap(random01(id.x + 10, ant), 0, 1, -0.2, 0.2) * rotationSpeed * idrunkness * 0.1;
+
+    float randomRotation = fmap(random01(id.x + 10, ant), 0, 1, -0.2, 0.2);
+    ant.angle += randomRotation * rotationSpeed * idrunkness * 0.1;
     //
     ant.angle = RotateTowardsCentre(ant);
 
