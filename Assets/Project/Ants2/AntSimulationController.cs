@@ -7,6 +7,7 @@ using Random = UnityEngine.Random;
 
 public class AntSimulationController : MonoBehaviour
 {
+    public Texture textureMap;
     public Material textureMaterial;
     
     public ComputeShader antBehaviorShader;

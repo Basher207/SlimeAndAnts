@@ -1,0 +1,224 @@
+#pragma kernel MarchingCubes
+
+RWStructuredBuffer<float3> VertexBuffer;
+RWStructuredBuffer<float3> NormalBuffer;
+RWStructuredBuffer<uint> Counter;
+
+StructuredBuffer<int> triTableIndex;
+StructuredBuffer<int> triTable;
+StructuredBuffer<int> triTableCount;
+
+uint maxTriangles = 0;
+
+float noiseScale = 1;
+float threshold = 0.5;
+
+
+int edgeTable[12*2] = { 
+    0, 1,
+    1, 2,
+    2, 3,
+    3, 0,
+    4, 5,
+    5, 6,
+    6, 7,
+    7, 4,
+    0, 4,
+    1, 5,
+    2, 6,
+    3, 7
+};
+float3 offsetTable [8]= {
+    float3(0, 0, 0),
+    float3(1, 0, 0),
+    float3(1, 1, 0),
+    float3(0, 1, 0),
+    float3(0, 0, 1),
+    float3(1, 0, 1),
+    float3(1, 1, 1),
+    float3(0, 1, 1)
+};
+
+
+int permutation[512] =
+{
+    151, 160, 137, 91, 90, 15,
+    131, 13, 201, 95, 96, 53, 194, 233, 7, 225, 140, 36, 103, 30, 69, 142, 8, 99, 37, 240, 21, 10, 23,
+    190, 6, 148, 247, 120, 234, 75, 0, 26, 197, 62, 94, 252, 219, 203, 117, 35, 11, 32, 57, 177, 33,
+    88, 237, 149, 56, 87, 174, 20, 125, 136, 171, 168, 68, 175, 74, 165, 71, 134, 139, 48, 27, 166,
+    77, 146, 158, 231, 83, 111, 229, 122, 60, 211, 133, 230, 220, 105, 92, 41, 55, 46, 245, 40, 244,
+    102, 143, 54, 65, 25, 63, 161, 1, 216, 80, 73, 209, 76, 132, 187, 208, 89, 18, 169, 200, 196,
+    135, 130, 116, 188, 159, 86, 164, 100, 109, 198, 173, 186, 3, 64, 52, 217, 226, 250, 124, 123,
+    5, 202, 38, 147, 118, 126, 255, 82, 85, 212, 207, 206, 59, 227, 47, 16, 58, 17, 182, 189, 28, 42,
+    223, 183, 170, 213, 119, 248, 152, 2, 44, 154, 163, 70, 221, 153, 101, 155, 167, 43, 172, 9,
+    129, 22, 39, 253, 19, 98, 108, 110, 79, 113, 224, 232, 178, 185, 112, 104, 218, 246, 97, 228,
+    251, 34, 242, 193, 238, 210, 144, 12, 191, 179, 162, 241, 81, 51, 145, 235, 249, 14, 239, 107,
+    49, 192, 214, 31, 181, 199, 106, 157, 184, 84, 204, 176, 115, 121, 50, 45, 127, 4, 150, 254,
+    138, 236, 205, 93, 222, 114, 67, 29, 24, 72, 243, 141, 128, 195, 78, 66, 215, 61, 156, 180,
+ 
+    151, 160, 137, 91, 90, 15,
+    131, 13, 201, 95, 96, 53, 194, 233, 7, 225, 140, 36, 103, 30, 69, 142, 8, 99, 37, 240, 21, 10, 23,
+    190, 6, 148, 247, 120, 234, 75, 0, 26, 197, 62, 94, 252, 219, 203, 117, 35, 11, 32, 57, 177, 33,
+    88, 237, 149, 56, 87, 174, 20, 125, 136, 171, 168, 68, 175, 74, 165, 71, 134, 139, 48, 27, 166,
+    77, 146, 158, 231, 83, 111, 229, 122, 60, 211, 133, 230, 220, 105, 92, 41, 55, 46, 245, 40, 244,
+    102, 143, 54, 65, 25, 63, 161, 1, 216, 80, 73, 209, 76, 132, 187, 208, 89, 18, 169, 200, 196,
+    135, 130, 116, 188, 159, 86, 164, 100, 109, 198, 173, 186, 3, 64, 52, 217, 226, 250, 124, 123,
+    5, 202, 38, 147, 118, 126, 255, 82, 85, 212, 207, 206, 59, 227, 47, 16, 58, 17, 182, 189, 28, 42,
+    223, 183, 170, 213, 119, 248, 152, 2, 44, 154, 163, 70, 221, 153, 101, 155, 167, 43, 172, 9,
+    129, 22, 39, 253, 19, 98, 108, 110, 79, 113, 224, 232, 178, 185, 112, 104, 218, 246, 97, 228,
+    251, 34, 242, 193, 238, 210, 144, 12, 191, 179, 162, 241, 81, 51, 145, 235, 249, 14, 239, 107,
+    49, 192, 214, 31, 181, 199, 106, 157, 184, 84, 204, 176, 115, 121, 50, 45, 127, 4, 150, 254,
+    138, 236, 205, 93, 222, 114, 67, 29, 24, 72, 243, 141, 128, 195, 78, 66, 215, 61, 156, 180
+};
+float Fade(float t) {
+    return t * t * t * (t * (t * 6 - 15) + 10);
+}
+
+float Lerp(float t, float a, float b) {
+    return a + t * (b - a);
+}
+
+float Grad(int hash, float x, float y, float z) {
+    int h = hash & 15;
+    float u = h < 8 ? x : y,
+          v = h < 4 ? y : h == 12 || h == 14 ? x : z;
+    return ((h & 1) == 0 ? u : -u) + ((h & 2) == 0 ? v : -v);
+}
+
+float PerlinNoise(float3 pos) {
+    int X = (int)floor(pos.x) & 255,
+        Y = (int)floor(pos.y) & 255,
+        Z = (int)floor(pos.z) & 255;
+    pos -= floor(pos);
+    float u = Fade(pos.x),
+          v = Fade(pos.y),
+          w = Fade(pos.z);
+
+    int A = permutation[X    ]+Y, AA = permutation[A]+Z, AB = permutation[A+1]+Z,
+        B = permutation[X+1  ]+Y, BA = permutation[B]+Z, BB = permutation[B+1]+Z;
+
+    return Lerp(w, Lerp(v, Lerp(u, Grad(permutation[AA  ], pos.x, pos.y, pos.z),
+                               Grad(permutation[BA  ], pos.x-1, pos.y, pos.z)),
+                       Lerp(u, Grad(permutation[AB  ], pos.x, pos.y-1, pos.z),
+                               Grad(permutation[BB  ], pos.x-1, pos.y-1, pos.z))),
+               Lerp(v, Lerp(u, Grad(permutation[AA+1], pos.x, pos.y, pos.z-1),
+                               Grad(permutation[BA+1], pos.x-1, pos.y, pos.z-1)),
+                       Lerp(u, Grad(permutation[AB+1], pos.x, pos.y-1, pos.z-1),
+                               Grad(permutation[BB+1], pos.x-1, pos.y-1, pos.z-1))));
+}
+float3 CalculateIntersection(uint3 id, int edgeIndex, float densities[8]) {
+    // The edgeTable defines the start and end of each of the 12 edges of the cube.
+    // edgeTable should be defined somewhere as a constant.
+    int edgeStart = edgeTable[edgeIndex * 2];
+    int edgeEnd = edgeTable[edgeIndex * 2 + 1];
+
+    // Calculate the start and end positions of this edge
+    float3 startPos = id + offsetTable[edgeStart];
+    float3 endPos = id + offsetTable[edgeEnd];
+
+    // Calculate the density at the start and end of the edge
+    float startDensity = densities[edgeStart];
+    float endDensity = densities[edgeEnd];
+    
+    if (abs(endDensity - startDensity) < 0.0001) {
+        return startPos;
+    } else {
+        float t = (threshold - startDensity) / (endDensity - startDensity);
+        return lerp(startPos, endPos, t);
+    }
+}
+
+float3 CalculateNormal(float3 pos) {
+    // Calculate the density at the points slightly to the left and right of pos
+    float densityX1 = PerlinNoise(pos + float3(-0.01, 0, 0));
+    float densityX2 = PerlinNoise(pos + float3(0.01, 0, 0));
+
+    // Calculate the density at the points slightly below and above pos
+    float densityY1 = PerlinNoise(pos + float3(0, -0.01, 0));
+    float densityY2 = PerlinNoise(pos + float3(0, 0.01, 0));
+
+    // Calculate the density at the points slightly behind and in front of pos
+    float densityZ1 = PerlinNoise(pos + float3(0, 0, -0.01));
+    float densityZ2 = PerlinNoise(pos + float3(0, 0, 0.01));
+
+    // Use the differences in densities to calculate the gradient
+    return normalize(float3(densityX2 - densityX1, densityY2 - densityY1, densityZ2 - densityZ1));
+}
+
+
+[numthreads(8,8,8)]
+void MarchingCubes (uint3 id : SV_DispatchThreadID)
+{
+    // Calculate the densities at the corners of the cube
+    float densities[8];
+    for (int i = 0; i < 8; i++) {
+        densities[i] = ((i - 4) / 4);// (sin((id.x+offsetTable[i].x)*noiseScale) + cos((id.y + offsetTable[i].y))*noiseScale) / 2;// PerlinNoise((id + offsetTable[i]) * noiseScale) - threshold;
+    }
+
+    // Calculate the case index
+    int caseIndex = 0;
+    for (int i = 0; i < 8; i++) {
+        if (densities[i] > 0) caseIndex |= 1<<i;
+    }
+    caseIndex = 5;
+    // Get the start index and count for this configuration
+    int startIndex = triTableIndex[caseIndex];
+    int count = triTableCount[caseIndex];
+
+    
+    // For each group of three indices in the triTable
+    for (int i = 0; i < count; i += 3) {
+        // Get the three indices from the triTable
+        int index1 = triTable[startIndex + i];
+        int index2 = triTable[startIndex + i + 1];
+        int index3 = triTable[startIndex + i + 2];
+
+        // Calculate the intersecting vertex for each index
+        float3 vertex1 = CalculateIntersection(id, index1, densities);
+        float3 vertex2 = CalculateIntersection(id, index2, densities);
+        float3 vertex3 = CalculateIntersection(id, index3, densities);
+
+        // Calculate the normal at each intersection
+        float3 normal1 = CalculateNormal(vertex1);
+        float3 normal2 = CalculateNormal(vertex2);
+        float3 normal3 = CalculateNormal(vertex3);
+
+        // Add the vertices and normals to the buffers
+
+        
+        int vertCount = 0;
+        
+        // int length = 0;
+        // int stride = 0;
+        // VertexBuffer.GetDimensions(length, stride);
+
+        uint count = Counter.IncrementCounter();
+        uint firstVertex = count * 3;
+        
+        if (firstVertex >= maxTriangles)
+            continue;
+
+        VertexBuffer[firstVertex] = vertex1;
+        NormalBuffer[firstVertex] = normal1;
+        
+        VertexBuffer[firstVertex + 1] = vertex2;
+        NormalBuffer[firstVertex + 1] = normal2;
+
+        VertexBuffer[firstVertex + 2] = vertex3;
+        NormalBuffer[firstVertex + 2] = normal3;
+    }
+}
+
+[numthreads(64, 1, 1)]
+void ClearUnused(uint id : SV_DispatchThreadID)
+{
+    while (true)
+    {
+        uint count = Counter.IncrementCounter();
+        if (count >= maxTriangles) break;
+        uint vidx = count * 3;
+        VertexBuffer[vidx] = float3(0,0,0);
+        VertexBuffer[vidx + 1] = float3(0,0,0);
+        VertexBuffer[vidx + 2] = float3(0,0,0);
+    }
+}
