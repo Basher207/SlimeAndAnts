@@ -282,11 +282,6 @@ void UpdateAnts (uint3 id : SV_DispatchThreadID) {
 
 
     
-    // float randomAngle = 2.0 * PI * random01(float2(time, ant.position.x + ant.position.y));
-    // float randomWeight = 0.05; // Tune this parameter to change the amount of randomness
-    // ant.angle = lerp(ant.angle, randomAngle, randomWeight);
-
-    
     // Apply movement
     float2 dir = float2(cos(ant.angle), sin(ant.angle));
     ant.position += dir * time * moveSpeed * pow(fmap(drunkness, 0, 1, 1, 3), 2);
