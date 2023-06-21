@@ -39,6 +39,7 @@
 //                    v                     //
 //////////////////////////////////////////////
 
+static const float PI = 3.14159265359;
 
 //Variables that exist per ant!
 //Currently our ant has a position (x/y position between 0 and 1)
@@ -103,7 +104,7 @@ int2 textureSize;
 //1.1 will become 0.1
 float2 Helper_WrapPosition(float2 position)
 {
-    return frac(position);
+    return fmod(position, float2(1,1));
 }
 
 
@@ -113,7 +114,7 @@ float2 Helper_WrapPosition(float2 position)
 //pixelPosition.x = -10 will return pixelPosition.x = (textureSize - 10)
 int2 Helper_WrapPixel(int2 pixelPosition)
 {
-    return frac(pixelPosition / textureSize) * textureSize;
+    return round((float2)pixelPosition / (float2)textureSize * (float2)textureSize);
 }
 
 //Takes a position, and converts it to the equivalent pixel coordinate 
@@ -121,7 +122,8 @@ int2 Helper_PositionToPixel (float2 position)
 {
     //Wraps position to make sure its between 0, and 1
     position = Helper_WrapPosition(position);
-    int2 pixelPos = (position * 0.5f + 0.5f) * textureSize;
+    
+    int2 pixelPos = round(position * textureSize);
     return pixelPos;
 }
 
@@ -134,7 +136,6 @@ int2 Helper_PositionToPixel (float2 position)
 ////////////////////////////////////////////
 
 
-float PI = 3.14159265358979323846;
 
 
 
@@ -222,11 +223,13 @@ float RotateTowards(float angle, float target, float maxChange)
         difference += 2 * PI;
     difference -= PI;
 
+    
     // Clamp the difference with the max change
     difference = clamp(difference, -maxChange, maxChange);
 
     // Add difference to the original angle and normalize again
     float newAngle = angle + difference;
+
     newAngle = fmod(newAngle + PI, 2 * PI);
     if (newAngle < 0)
         newAngle += 2 * PI;
@@ -236,7 +239,7 @@ float RotateTowards(float angle, float target, float maxChange)
 }
 float RotateTowardsCentre(Ant ant) {
     // The center in normalized coordinates is (0,0)
-    float2 centre = float2(0, 0);
+    float2 centre = float2(0.5, 0.5);
 
     // Compute the direction from the ant to the centre
     float2 toCentre = centre - ant.position;
@@ -245,8 +248,8 @@ float RotateTowardsCentre(Ant ant) {
     // Compute the target angle using atan2, this gives us the angle from the ant to the centre
     float targetAngle = atan2(toCentre.y, toCentre.x);
 
-    float distanceForInwardsPressure = 0.8;
-    float inwardsPressure = fmap(distance, distanceForInwardsPressure, 1, 0, 0.08);
+    float distanceForInwardsPressure = 0.35;
+    float inwardsPressure = fmap(distance, distanceForInwardsPressure, 0.48, 0, 0.09);
     inwardsPressure = clamp(inwardsPressure, 0, 1);
     
     // Use the RotateTowards function to gradually rotate the ant towards the centre
@@ -261,19 +264,24 @@ float RotateTowardsCentre(Ant ant) {
 void UpdateAnts (uint3 id : SV_DispatchThreadID) {
     if (id.x >= numberOfAnts) return;
 
+    //Get the ant
     Ant ant = antBuffer[id.x];
+    
     float drunkness = trailMap[Helper_PositionToPixel(ant.position)].b;
     float idrunkness = 1 - drunkness;
     float leftSensorVal = sense(ant, sensorAngle) + random01(id.x, ant);
     float rightSensorVal = sense(ant, -sensorAngle) + random01(id.x, ant);
-
+    //
     float distanceFromCenter = length(ant.position);
     float iDistanceFromCenter = 1 - distanceFromCenter;
-
+    //
     ant.angle += time * rotationSpeed * (leftSensorVal - rightSensorVal) * idrunkness * fmap(distanceFromCenter, 0, 1, 0, 1);// / fmap(drunkness, 0, 1, 1, 5);// ? 1 : 0);
     ant.angle += fmap(random01(id.x + 10, ant), 0, 1, -0.2, 0.2) * rotationSpeed * idrunkness * 0.1;
-
+    //
     ant.angle = RotateTowardsCentre(ant);
+
+
+    
     // float randomAngle = 2.0 * PI * random01(float2(time, ant.position.x + ant.position.y));
     // float randomWeight = 0.05; // Tune this parameter to change the amount of randomness
     // ant.angle = lerp(ant.angle, randomAngle, randomWeight);
@@ -281,7 +289,7 @@ void UpdateAnts (uint3 id : SV_DispatchThreadID) {
     
     // Apply movement
     float2 dir = float2(cos(ant.angle), sin(ant.angle));
-    ant.position += dir * time * moveSpeed * pow(fmap(drunkness, 0, 1, 1, 5), 2);
+    ant.position += dir * time * moveSpeed * pow(fmap(drunkness, 0, 1, 1, 3), 2);
     
     ant.position = Helper_WrapPosition(ant.position);
 
@@ -304,15 +312,15 @@ void DrawAnts (uint3 id : SV_DispatchThreadID) {
         Ant ant = antBuffer[id.x];
 
         // Convert normalized position to texture coordinates
-        int2 pos = Helper_PositionToPixel (ant.position);
+        int2 pos = ant.position * textureSize;
         
         // Draw the ant onto the trail map
         float4 newColor = float4(1, 0.2, 0.02, 1);
-        // if (newColor.b > 0.8)
-        // {
-        //     newColor.r -= fmap(newColor.b, 0.8, 1, 0, 1);
-        // }
-        
+        if (newColor.b > 0.8)
+        {
+            // newColor.r -= fmap(newColor.b, 0.8, 1, 0, 1);
+        }
+        newColor = clamp(newColor, 0, 1);
         trailMap[pos] += newColor; // white color
     }
 }
@@ -333,7 +341,7 @@ void DrawAnts (uint3 id : SV_DispatchThreadID) {
 void TextureDissipation (uint3 id : SV_DispatchThreadID) {
     float4 sum = float4(0, 0, 0, 0);
     int count = 0;
-
+    
     // Average the color of the surrounding pixels
     for (int dx = -1; dx <= 1; dx++) {
         for (int dy = -1; dy <= 1; dy++) {
@@ -344,13 +352,13 @@ void TextureDissipation (uint3 id : SV_DispatchThreadID) {
         }
     }
 
-    // float4 newColor = float4(1,1,1,1);
-    //
-    // newColor.r = lerp(trailMap[id.xy].r, sum.r / count, 0.3) * 0.99;
-    // newColor.g = lerp(trailMap[id.xy].g, sum.g / count, 0.1) * 0.97;
-    // newColor.b = lerp(trailMap[id.xy].b, sum.b / count, 0.3) * 0.994;
-
-    // trailMap[id.xy] = newColor;
+    float4 newColor = float4(1,1,1,1);
+    
+    newColor.r = lerp(trailMap[id.xy].r, sum.r / count, 0.3) * 0.99;
+    newColor.g = lerp(trailMap[id.xy].g, sum.g / count, 0.1) * 0.97;
+    newColor.b = lerp(trailMap[id.xy].b, sum.b / count, 0.3) * 0.994;
+    
+    trailMap[id.xy] = newColor;
     // Apply the average color
 }
 

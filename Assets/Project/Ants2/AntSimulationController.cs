@@ -60,10 +60,8 @@ public class AntSimulationController : MonoBehaviour
     public Material materialToApplyTextureOn;
 
 
-
-    public int numberOfAnts = 1000;
-    
-
+    [Header("Dont change at runtime")]
+    public int numberOfAnts = 10000;
     
     
     
@@ -148,6 +146,7 @@ public class AntSimulationController : MonoBehaviour
         //General variables
         computeShader.SetFloat("time", 1f / targetFrameRate);
         computeShader.SetInt("numberOfAnts", numberOfAnts);
+        computeShader.SetInts("textureSize", new int[2] { trailMap.width, trailMap.height });
         
         
         int updateAntsKernel = computeShader.FindKernel("UpdateAnts");
@@ -155,12 +154,12 @@ public class AntSimulationController : MonoBehaviour
         int textureDissipationKernel = computeShader.FindKernel("TextureDissipation");
 
         UpdateComputeShaderKernelVariables(updateAntsKernel);
-        UpdateComputeShaderKernelVariables(drawAntsKernel);            
+        UpdateComputeShaderKernelVariables(drawAntsKernel);
         UpdateComputeShaderKernelVariables(textureDissipationKernel);
             
-        // computeShader.Dispatch(updateAntsKernel, numberOfAnts / 64, 1, 1);
-        computeShader.Dispatch(drawAntsKernel, trailMap.width / 8, trailMap.height / 8, 1);
-        // computeShader.Dispatch(textureDissipationKernel, trailMap.width / 8, trailMap.height / 8, 1);
+        computeShader.Dispatch(updateAntsKernel, numberOfAnts / 64, 1, 1);
+        computeShader.Dispatch(drawAntsKernel, numberOfAnts / 64, 1, 1);
+        computeShader.Dispatch(textureDissipationKernel, trailMap.width / 8, trailMap.height / 8, 1);
     }
 
     void UpdateComputeShaderKernelVariables(int kernelIndex)
