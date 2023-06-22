@@ -415,7 +415,7 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
---- !u!1001 &9115523779920552436
+--- !u!1001 &1883810317874123985
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -423,88 +423,80 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 9115523779242747696, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
-      propertyPath: numberOfAnts
-      value: 500000
-      objectReference: {fileID: 0}
-    - target: {fileID: 9115523779242747696, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
-      propertyPath: shaderVariables.Array.data[0].value
-      value: 0.03
-      objectReference: {fileID: 0}
-    - target: {fileID: 9115523779242747696, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
-      propertyPath: shaderVariables.Array.data[1].value
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 9115523779242747696, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
-      propertyPath: shaderVariables.Array.data[2].value
-      value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 9115523779242747696, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
-      propertyPath: shaderVariables.Array.data[3].value
-      value: 0.05
-      objectReference: {fileID: 0}
-    - target: {fileID: 9115523779242747696, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
-      propertyPath: shaderVariables.Array.data[4].value
-      value: 5
-      objectReference: {fileID: 0}
-    - target: {fileID: 9115523779242747696, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
-      propertyPath: shaderVariables.Array.data[5].value
-      value: 55
-      objectReference: {fileID: 0}
-    - target: {fileID: 9115523779242747696, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
-      propertyPath: shaderVariables.Array.data[6].value
-      value: 0.015
-      objectReference: {fileID: 0}
-    - target: {fileID: 9115523779242747701, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
+    - target: {fileID: 1883810318555271696, guid: aa39ba9aaf1ce428f88c7eb9ce7f1680, type: 3}
       propertyPath: m_Name
-      value: ComputeShaderController
+      value: PurpleMaze
       objectReference: {fileID: 0}
-    - target: {fileID: 9115523779242747703, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
+    - target: {fileID: 1883810318555271698, guid: aa39ba9aaf1ce428f88c7eb9ce7f1680, type: 3}
       propertyPath: m_RootOrder
       value: 2
       objectReference: {fileID: 0}
-    - target: {fileID: 9115523779242747703, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
+    - target: {fileID: 1883810318555271698, guid: aa39ba9aaf1ce428f88c7eb9ce7f1680, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 9115523779242747703, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
+    - target: {fileID: 1883810318555271698, guid: aa39ba9aaf1ce428f88c7eb9ce7f1680, type: 3}
       propertyPath: m_LocalPosition.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 9115523779242747703, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
+    - target: {fileID: 1883810318555271698, guid: aa39ba9aaf1ce428f88c7eb9ce7f1680, type: 3}
       propertyPath: m_LocalPosition.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 9115523779242747703, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
+    - target: {fileID: 1883810318555271698, guid: aa39ba9aaf1ce428f88c7eb9ce7f1680, type: 3}
       propertyPath: m_LocalRotation.w
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 9115523779242747703, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
+    - target: {fileID: 1883810318555271698, guid: aa39ba9aaf1ce428f88c7eb9ce7f1680, type: 3}
       propertyPath: m_LocalRotation.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 9115523779242747703, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
+    - target: {fileID: 1883810318555271698, guid: aa39ba9aaf1ce428f88c7eb9ce7f1680, type: 3}
       propertyPath: m_LocalRotation.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 9115523779242747703, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
+    - target: {fileID: 1883810318555271698, guid: aa39ba9aaf1ce428f88c7eb9ce7f1680, type: 3}
       propertyPath: m_LocalRotation.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 9115523779242747703, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
+    - target: {fileID: 1883810318555271698, guid: aa39ba9aaf1ce428f88c7eb9ce7f1680, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 9115523779242747703, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
+    - target: {fileID: 1883810318555271698, guid: aa39ba9aaf1ce428f88c7eb9ce7f1680, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 9115523779242747703, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
+    - target: {fileID: 1883810318555271698, guid: aa39ba9aaf1ce428f88c7eb9ce7f1680, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1883810318555271701, guid: aa39ba9aaf1ce428f88c7eb9ce7f1680, type: 3}
+      propertyPath: numberOfAnts
+      value: 250000
+      objectReference: {fileID: 0}
+    - target: {fileID: 1883810318555271701, guid: aa39ba9aaf1ce428f88c7eb9ce7f1680, type: 3}
+      propertyPath: shaderVariables.Array.data[0].value
+      value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1883810318555271701, guid: aa39ba9aaf1ce428f88c7eb9ce7f1680, type: 3}
+      propertyPath: shaderVariables.Array.data[2].value
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1883810318555271701, guid: aa39ba9aaf1ce428f88c7eb9ce7f1680, type: 3}
+      propertyPath: shaderVariables.Array.data[3].value
+      value: 0.01
+      objectReference: {fileID: 0}
+    - target: {fileID: 1883810318555271701, guid: aa39ba9aaf1ce428f88c7eb9ce7f1680, type: 3}
+      propertyPath: shaderVariables.Array.data[5].value
+      value: 15
+      objectReference: {fileID: 0}
+    - target: {fileID: 1883810318555271701, guid: aa39ba9aaf1ce428f88c7eb9ce7f1680, type: 3}
+      propertyPath: shaderVariables.Array.data[6].value
+      value: 0.008
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
+  m_SourcePrefab: {fileID: 100100000, guid: aa39ba9aaf1ce428f88c7eb9ce7f1680, type: 3}

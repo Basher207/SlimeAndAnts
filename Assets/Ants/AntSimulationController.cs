@@ -82,7 +82,7 @@ public class AntSimulationController : MonoBehaviour
         ants = new Ant[numberOfAnts];
         for (int i = 0; i < numberOfAnts; i++)
         {
-            Vector2 position = new Vector2(0.5f, 0.5f) + Random.insideUnitCircle * 0.05f;
+            Vector2 position = new Vector2(0.5f, 0.5f) + Random.insideUnitCircle * 0.2f;
             float angle = Random.Range(-Mathf.PI, Mathf.PI);
             
             ants[i] = new Ant {
@@ -123,8 +123,10 @@ public class AntSimulationController : MonoBehaviour
         
         computeShader.SetInt("numberOfAnts", numberOfAnts);
         computeShader.SetInts("textureSize", new int[2] { trailMap.width, trailMap.height });
-        computeShader.SetFloat("micInput", MicInput.MicLoudness);
-        Debug.Log(MicInput.MicLoudness);
+        
+        Vector2 viewPortPoint = Camera.main.ScreenToViewportPoint(Input.mousePosition);
+
+        computeShader.SetVector("center", viewPortPoint);
         
         
         int updateAntsKernel = computeShader.FindKernel("UpdateAnts");
