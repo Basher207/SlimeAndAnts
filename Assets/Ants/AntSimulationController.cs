@@ -104,36 +104,10 @@ public class AntSimulationController : MonoBehaviour
         {
             CallShaderFunctions();
             
-            // antBehaviorShader.SetFloat("time", 1f / targetFrameRate);
-            //
-            // antBehaviorShader.SetFloat("sensorAngle", sensorAngle);
-            // antBehaviorShader.SetFloat("sensorScale", sensorScale);
-            // antBehaviorShader.SetFloat("rotationSpeed", rotationSpeed);
-            // antBehaviorShader.SetFloat("moveSpeed", moveSpeed);
-            //
-            // antBehaviorShader.SetFloat("repulseScale", repulseScale);
-            // antBehaviorShader.SetFloat("attractionScale", attractionScale);
-            // antBehaviorShader.SetFloat("sensorDistance", sensorDistance);
-            //
-            // antBehaviorShader.SetInt("numAnts", currentNumberOfAnts);
-            // antBehaviorShader.SetInts("textureSize", new int[2] { trailMap.width, trailMap.height });
-            // antBehaviorShader.Dispatch(antBehaviorKernel, currentNumberOfAnts / 64, 1, 1);
-            //
-            // // Execute the draw ants shader
-            // int drawAntsKernel = drawAntsShader.FindKernel("CSMain");
-            // drawAntsShader.SetTexture(drawAntsKernel, "trailMap", trailMap);
-            // drawAntsShader.SetBuffer(drawAntsKernel, "antBuffer", antBuffer);
-            // drawAntsShader.SetInts("textureSize", new int[2] { trailMap.width, trailMap.height });
-            // drawAntsShader.Dispatch(drawAntsKernel, currentNumberOfAnts / 64, 1, 1);
-
-            // Execute the diffuse trail shader
-            // int diffuseTrailKernel = diffuseTrailShader.FindKernel("CSMain");
-            // diffuseTrailShader.Dispatch(diffuseTrailKernel, trailMap.width / 8, trailMap.height / 8, 1);
-
             yield return new WaitForSeconds(1f / targetFrameRate);
         }
     }
-
+    
     void CallShaderFunctions()
     {
         //Assign the shader variables
@@ -144,9 +118,13 @@ public class AntSimulationController : MonoBehaviour
         }
         
         //General variables
-        computeShader.SetFloat("time", 1f / targetFrameRate);
+        computeShader.SetFloat("deltaTime", 1f / targetFrameRate);
+        computeShader.SetFloat("time", Time.time);
+        
         computeShader.SetInt("numberOfAnts", numberOfAnts);
         computeShader.SetInts("textureSize", new int[2] { trailMap.width, trailMap.height });
+        computeShader.SetFloat("micInput", MicInput.MicLoudness);
+        Debug.Log(MicInput.MicLoudness);
         
         
         int updateAntsKernel = computeShader.FindKernel("UpdateAnts");

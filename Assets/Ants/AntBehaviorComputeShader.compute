@@ -63,6 +63,8 @@ RWStructuredBuffer<Ant> antBuffer;
 //To add more, simply create a new variable, then select the AntSimulationController in the scene
 //Then add a Shader Variable to the list of shader variables!  
 float time;
+
+float deltaTime;
 float sensorAngle;
 float sensorPixelWidth;
 float rotationSpeed;
@@ -71,6 +73,8 @@ float moveSpeed;
 float repulseScale;
 float attractionScale;
 float sensorDistance;
+
+float micInput;
 
 int numberOfAnts;
 int2 textureSize;
@@ -104,7 +108,7 @@ int2 textureSize;
 //1.1 will become 0.1
 float2 Helper_WrapPosition(float2 position)
 {
-    return fmod(position, float2(1,1));
+    return frac(position);
 }
 
 
@@ -147,27 +151,17 @@ float fmap(float value, float inMin, float inMax, float outMin, float outMax)
 
 
 
-//Random generation logic, generating a random number in a compute shader is weird x) 
-uint hash(uint state)
+float random01(int id)
 {
-    state ^= 2747636419u;
-    state *= 2654435769u;
-    state ^= state >> 16;
-    state *= 2654435769u;
-    state ^= state >> 16;
-    state *= 2654435769u;
-    return state;
-}
-float scaleToRange01(uint state)
-{
-    return state / 4294967295.0;
-}
-//Returns a random number between 0 and 1
-float random01(int id, Ant ant)
-{
-    return scaleToRange01(hash(ant.position.y + time * textureSize.x + ant.position.x + hash(id.x + time * 100000)));
-}
+    // Construct a unique seed for this thread and the current time.
+    float uniqueSeed = (float)id * time;
 
+    // Compute a pseudo-random number using a simple algorithm.
+    float random = frac(sin(uniqueSeed) * 43758.5453123);
+
+    // Return the random number.
+    return random;
+}
 
 //////////////////////////////
 //                          //
@@ -249,7 +243,7 @@ float RotateTowardsCentre(Ant ant) {
     float targetAngle = atan2(toCentre.y, toCentre.x);
 
     float distanceForInwardsPressure = 0.35;
-    float inwardsPressure = fmap(distance, distanceForInwardsPressure, 0.48, 0, 0.09);
+    float inwardsPressure = fmap(distance, distanceForInwardsPressure, 0.5, 0, 0.1);
     inwardsPressure = clamp(inwardsPressure, 0, 1);
     
     // Use the RotateTowards function to gradually rotate the ant towards the centre
@@ -267,28 +261,36 @@ void UpdateAnts (uint3 id : SV_DispatchThreadID) {
     //Get the ant
     Ant ant = antBuffer[id.x];
 
+    float mic = 0;//pow(fmap(micInput, 0, 1, 0, 20), 2);
+    if (mic < 0.8)
+    {
+        mic = 0;
+    }
+    
+    float2 forward = float2(cos(ant.angle), sin(ant.angle)) * sensorDistance;
+    
     //Drunkess of the ant prevents ants from being too close to other ants.
-    float drunkness = trailMap[Helper_PositionToPixel(ant.position)].b;
+    float drunkness = trailMap[Helper_PositionToPixel(ant.position + forward)].b;//trailMap[Helper_PositionToPixel(ant.position)].b / 10;//mic / 40;//trailMap[Helper_PositionToPixel(ant.position)].b;
     float idrunkness = 1 - drunkness;
 
     //Left sensor and right sensor, 
-    float leftSensorVal = sense(ant, sensorAngle) + random01(id.x, ant);
-    float rightSensorVal = sense(ant, -sensorAngle) + random01(id.x, ant);
+    float leftSensorVal = sense(ant, sensorAngle );// * fmap(random01(id.x), 0, 1, 0.9, 1.1);
+    float rightSensorVal = sense(ant, -sensorAngle);// * fmap(random01(id.x), 0, 1, 0.9, 1.1);
     //
-    float distanceFromCenter = length(ant.position);
+    float distanceFromCenter = distance(float2(0.5,0.5), ant.position);
+    float iDistanceFromCenter = 1 - distanceFromCenter;
     
-    ant.angle += time * rotationSpeed * (leftSensorVal - rightSensorVal) * idrunkness * fmap(distanceFromCenter, 0, 1, 0, 1);// / fmap(drunkness, 0, 1, 1, 5);// ? 1 : 0);
+    ant.angle += deltaTime * rotationSpeed * (leftSensorVal - rightSensorVal) * fmap(drunkness, 0, 1, 1, 0.2)  * fmap(distanceFromCenter, 0, 0.5, 0.5, 1.5);// / fmap(drunkness, 0, 1, 1, 5);// ? 1 : 0);
 
-    float randomRotation = fmap(random01(id.x + 10, ant), 0, 1, -0.2, 0.2);
-    ant.angle += randomRotation * rotationSpeed * idrunkness * 0.1;
-    //
+    float randomRotation = fmap(random01(id.x), 0, 1, -0.5, 0.5);
+    ant.angle += randomRotation * rotationSpeed * fmap(drunkness, 0, 1, 0.4, 1) * 0.1;
+    
     ant.angle = RotateTowardsCentre(ant);
 
 
-    
     // Apply movement
     float2 dir = float2(cos(ant.angle), sin(ant.angle));
-    ant.position += dir * time * moveSpeed * pow(fmap(drunkness, 0, 1, 1, 3), 2);
+    ant.position += dir * deltaTime * moveSpeed * pow(fmap(drunkness, 0, 1, 1, 6), 2);
     
     ant.position = Helper_WrapPosition(ant.position);
 
@@ -314,13 +316,9 @@ void DrawAnts (uint3 id : SV_DispatchThreadID) {
         int2 pos = ant.position * textureSize;
         
         // Draw the ant onto the trail map
-        float4 newColor = float4(1, 0.2, 0.02, 1);
-        if (newColor.b > 0.8)
-        {
-            // newColor.r -= fmap(newColor.b, 0.8, 1, 0, 1);
-        }
-        newColor = clamp(newColor, 0, 1);
-        trailMap[pos] += newColor; // white color
+        float4 newColor = float4(fmap(trailMap[pos].b, 1, 0, 0.02, 0.3), 0.2, 0.01, 1);
+
+        trailMap[pos] = clamp(trailMap[pos] + newColor, float4(0,0,0,0), float4(1,1,1,1));
     }
 }
 
@@ -350,12 +348,29 @@ void TextureDissipation (uint3 id : SV_DispatchThreadID) {
             count++;
         }
     }
-
+    
+    
     float4 newColor = float4(1,1,1,1);
     
-    newColor.r = lerp(trailMap[id.xy].r, sum.r / count, 0.3) * 0.99;
-    newColor.g = lerp(trailMap[id.xy].g, sum.g / count, 0.1) * 0.97;
-    newColor.b = lerp(trailMap[id.xy].b, sum.b / count, 0.3) * 0.994;
+    
+    newColor.r = lerp(trailMap[id.xy].r, sum.r / count, 0.4) * 0.99;
+    newColor.g = lerp(trailMap[id.xy].g, sum.g / count, 0.01) * 0.7;
+    newColor.b = lerp(trailMap[id.xy].b, sum.b / count, 0.99) * 0.99;
+
+    
+    
+    // if (trailMap[id.xy].b > 0.3 && trailMap[id.xy].r > 0.002)
+    // {
+    //     float burn = 0.9;//fmap(trailMap[id.xy].b * trailMap[id.xy].r, 0.3, 1, 0.2, 1);
+    //     newColor.r *= 0.9;
+    //     newColor.b /= 0.9;
+    // }
+    
+    // if (trailMap[id.xy].r < 0.1)
+    // {
+    //     newColor.b *= 0.1;
+    // }
+    newColor = clamp(newColor, float4(0,0,0,0), float4(1,1,1,1));
     
     trailMap[id.xy] = newColor;
     // Apply the average color

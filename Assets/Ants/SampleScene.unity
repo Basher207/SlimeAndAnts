@@ -425,11 +425,35 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 9115523779242747696, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
       propertyPath: numberOfAnts
-      value: 100000
+      value: 500000
+      objectReference: {fileID: 0}
+    - target: {fileID: 9115523779242747696, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
+      propertyPath: shaderVariables.Array.data[0].value
+      value: 0.03
+      objectReference: {fileID: 0}
+    - target: {fileID: 9115523779242747696, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
+      propertyPath: shaderVariables.Array.data[1].value
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 9115523779242747696, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
+      propertyPath: shaderVariables.Array.data[2].value
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 9115523779242747696, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
+      propertyPath: shaderVariables.Array.data[3].value
+      value: 0.05
+      objectReference: {fileID: 0}
+    - target: {fileID: 9115523779242747696, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
+      propertyPath: shaderVariables.Array.data[4].value
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 9115523779242747696, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
+      propertyPath: shaderVariables.Array.data[5].value
+      value: 55
       objectReference: {fileID: 0}
     - target: {fileID: 9115523779242747696, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
       propertyPath: shaderVariables.Array.data[6].value
-      value: 0.02
+      value: 0.015
       objectReference: {fileID: 0}
     - target: {fileID: 9115523779242747701, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
       propertyPath: m_Name
