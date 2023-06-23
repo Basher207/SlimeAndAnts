@@ -164,6 +164,47 @@ float random01(int id)
     return random;
 }
 
+
+// float WrappingDistance(float2 pos1, float2 pos2)
+// {
+//     
+// }
+
+float2 NearestDelta(float2 pos1, float2 pos2)
+{
+    pos1 = Helper_WrapPosition(pos1);
+    pos2 = Helper_WrapPosition(pos2);
+    
+    float2 delta = pos1 - pos2;
+    if (delta.x > 0.5)
+    {
+        delta.x = delta.x - 1; 
+    }
+    
+    if (delta.x < -0.5)
+    {
+        delta.x = 1 + delta.x; 
+    }
+    
+    if (delta.y > 0.5)
+    {
+        delta.y = delta.y - 1; 
+    }
+    
+    if (delta.y < -0.5)
+    {
+        delta.y = 1 + delta.y; 
+    }
+
+    return delta;
+}
+float WrappingDistance(float2 pos1, float2 pos2)
+{
+    // Store delta in buffer
+    float2 delta = NearestDelta(pos1, pos2);
+    return length(delta);
+}
+
 //////////////////////////////
 //                          //
 //   ANT LOGIC FUNCTIONS!   //
@@ -236,8 +277,8 @@ float RotateTowardsCentre(Ant ant, float2 center, float rotationDistanceMin, flo
     // The center in normalized coordinates is (0,0)
     
     // Compute the direction from the ant to the centre
-    float2 toCentre = center - ant.position;
-    float distance = length(toCentre);
+    float2 toCentre = NearestDelta(center, ant.position);
+    float distance = WrappingDistance(center, ant.position);
     
     // Compute the target angle using atan2, this gives us the angle from the ant to the centre
     float targetAngle = atan2(toCentre.y, toCentre.x);
@@ -255,7 +296,6 @@ float RotateTowardsCentre(Ant ant, float2 center, float rotationDistanceMin, flo
 }
 
 
-
 [numthreads(64,1,1)]
 void UpdateAnts (uint3 id : SV_DispatchThreadID) {
     if (id.x >= numberOfAnts) return;
@@ -263,10 +303,13 @@ void UpdateAnts (uint3 id : SV_DispatchThreadID) {
     //Get the ant
     Ant ant = antBuffer[id.x];
 
-    float mic = 0;//pow(fmap(micInput, 0, 1, 0, 20), 2);
-    if (mic < 0.8)
+    float distanceToMouse = WrappingDistance(mousePos, ant.position);
+    float mouseAttractionRange = 0.1;
+    
+    float mouseAttraction = fmap(distanceToMouse, 0, mouseAttractionRange, 1, 0);
+    if (distanceToMouse > mouseAttractionRange)
     {
-        mic = 0;
+        mouseAttraction = 0;
     }
     
     float2 forward = float2(cos(ant.angle), sin(ant.angle)) * sensorDistance;
@@ -279,25 +322,26 @@ void UpdateAnts (uint3 id : SV_DispatchThreadID) {
     float leftSensorVal = sense(ant, sensorAngle );// * fmap(random01(id.x), 0, 1, 0.9, 1.1);
     float rightSensorVal = sense(ant, -sensorAngle);// * fmap(random01(id.x), 0, 1, 0.9, 1.1);
     //
-    float distanceFromCenter = distance(float2(0.5,0.5), ant.position);
+    float distanceFromCenter = WrappingDistance(float2(0.5,0.5), ant.position);
     float iDistanceFromCenter = 1 - distanceFromCenter;
+    
+
+
     
     ant.angle += deltaTime * rotationSpeed * (leftSensorVal - rightSensorVal) * fmap(drunkness, 0, 1, 1, 0.2)  * fmap(distanceFromCenter, 0, 0.5, 0.5, 1.5);// / fmap(drunkness, 0, 1, 1, 5);// ? 1 : 0);
 
     float randomRotation = fmap(random01(id.x), 0, 1, -0.5, 0.5);
-    ant.angle += randomRotation * rotationSpeed * fmap(drunkness, 0, 1, 0.4, 1) * 0.1;
+    ant.angle += randomRotation * rotationSpeed * fmap(drunkness, 0, 1, 0.4, 1) * 0.1 * mouseAttraction * 50;
 
-    float distanceToMouse = length(mousePos - ant.position);
-    float mouseAttractionRange = 0.2;
-    float mouseAttraction = fmap(distanceToMouse, 0, mouseAttractionRange, 1, 0);
     
-    ant.angle = RotateTowardsCentre(ant, float2(0.5, 0.5), 0.35, 1, 0.2);
-    ant.angle = RotateTowardsCentre(ant, mousePos, 0.0, 0.1,  0.2);
+    
+    ant.angle = RotateTowardsCentre(ant, mousePos, mouseAttractionRange, 0.5, 0.6);
+    // ant.angle = RotateTowardsCentre(ant, mousePos, 0.0, 0.4,  mouseAttraction);
 
 
     // Apply movement
     float2 dir = float2(cos(ant.angle), sin(ant.angle));
-    ant.position += dir * deltaTime * moveSpeed * pow(fmap(drunkness + mouseAttraction, 0, 1, 1, 6), 2);
+    ant.position += dir * deltaTime * moveSpeed * pow(fmap(drunkness - mouseAttraction*5, 0, 1, 1, 2), 4);
     
     ant.position = Helper_WrapPosition(ant.position);
 
