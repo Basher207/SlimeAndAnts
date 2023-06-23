@@ -73,6 +73,7 @@ float moveSpeed;
 float repulseScale;
 float attractionScale;
 float sensorDistance;
+float2 mousePos;
 
 float micInput;
 
@@ -231,20 +232,21 @@ float RotateTowards(float angle, float target, float maxChange)
 
     return newAngle;
 }
-float RotateTowardsCentre(Ant ant) {
+float RotateTowardsCentre(Ant ant, float2 center, float rotationDistanceMin, float rotationDistanceMax, float rotationPressure) {
     // The center in normalized coordinates is (0,0)
-    float2 centre = float2(0.5, 0.5);
-
+    
     // Compute the direction from the ant to the centre
-    float2 toCentre = centre - ant.position;
+    float2 toCentre = center - ant.position;
     float distance = length(toCentre);
     
     // Compute the target angle using atan2, this gives us the angle from the ant to the centre
     float targetAngle = atan2(toCentre.y, toCentre.x);
 
-    float distanceForInwardsPressure = 0.35;
-    float inwardsPressure = fmap(distance, distanceForInwardsPressure, 0.5, 0, 0.1);
-    inwardsPressure = clamp(inwardsPressure, 0, 1);
+    if (distance < rotationDistanceMin || distance > rotationDistanceMax)
+        return ant.angle;
+    
+    float inwardsPressure = fmap(distance, rotationDistanceMin, rotationDistanceMax, 0, rotationPressure);
+    // inwardsPressure = clamp(inwardsPressure, 0, 1);
     
     // Use the RotateTowards function to gradually rotate the ant towards the centre
     ant.angle = RotateTowards(ant.angle, targetAngle, inwardsPressure);
@@ -284,13 +286,18 @@ void UpdateAnts (uint3 id : SV_DispatchThreadID) {
 
     float randomRotation = fmap(random01(id.x), 0, 1, -0.5, 0.5);
     ant.angle += randomRotation * rotationSpeed * fmap(drunkness, 0, 1, 0.4, 1) * 0.1;
+
+    float distanceToMouse = length(mousePos - ant.position);
+    float mouseAttractionRange = 0.2;
+    float mouseAttraction = fmap(distanceToMouse, 0, mouseAttractionRange, 1, 0);
     
-    ant.angle = RotateTowardsCentre(ant);
+    ant.angle = RotateTowardsCentre(ant, float2(0.5, 0.5), 0.35, 1, 0.2);
+    ant.angle = RotateTowardsCentre(ant, mousePos, 0.0, 0.1,  0.2);
 
 
     // Apply movement
     float2 dir = float2(cos(ant.angle), sin(ant.angle));
-    ant.position += dir * deltaTime * moveSpeed * pow(fmap(drunkness, 0, 1, 1, 6), 2);
+    ant.position += dir * deltaTime * moveSpeed * pow(fmap(drunkness + mouseAttraction, 0, 1, 1, 6), 2);
     
     ant.position = Helper_WrapPosition(ant.position);
 

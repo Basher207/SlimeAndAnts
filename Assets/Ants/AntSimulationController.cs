@@ -122,10 +122,11 @@ public class AntSimulationController : MonoBehaviour
         computeShader.SetFloat("time", Time.time);
         
         computeShader.SetInt("numberOfAnts", numberOfAnts);
+        
+        computeShader.SetVector("mousePos", Camera.main.ScreenToViewportPoint(Input.mousePosition));
+        
         computeShader.SetInts("textureSize", new int[2] { trailMap.width, trailMap.height });
         computeShader.SetFloat("micInput", MicInput.MicLoudness);
-        Debug.Log(MicInput.MicLoudness);
-        
         
         int updateAntsKernel = computeShader.FindKernel("UpdateAnts");
         int drawAntsKernel = computeShader.FindKernel("DrawAnts");
