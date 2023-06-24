@@ -73,7 +73,7 @@ public class AntSimulationController : MonoBehaviour
     
     void Start() {
         // Initialize the trail map
-        trailMap = new RenderTexture(2160, 2160, 0, RenderTextureFormat.ARGBFloat);
+        trailMap = new RenderTexture(1080, 1080, 0, RenderTextureFormat.ARGBFloat);
         trailMap.enableRandomWrite = true;
         trailMap.Create();
         materialToApplyTextureOn.mainTexture = trailMap;

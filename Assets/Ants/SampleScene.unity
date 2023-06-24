@@ -473,7 +473,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1883810318555271701, guid: aa39ba9aaf1ce428f88c7eb9ce7f1680, type: 3}
       propertyPath: numberOfAnts
-      value: 250000
+      value: 500000
+      objectReference: {fileID: 0}
+    - target: {fileID: 1883810318555271701, guid: aa39ba9aaf1ce428f88c7eb9ce7f1680, type: 3}
+      propertyPath: targetFrameRate
+      value: 60
       objectReference: {fileID: 0}
     - target: {fileID: 1883810318555271701, guid: aa39ba9aaf1ce428f88c7eb9ce7f1680, type: 3}
       propertyPath: shaderVariables.Array.data[0].value
@@ -485,7 +489,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1883810318555271701, guid: aa39ba9aaf1ce428f88c7eb9ce7f1680, type: 3}
       propertyPath: shaderVariables.Array.data[3].value
-      value: 0.01
+      value: 0.05
       objectReference: {fileID: 0}
     - target: {fileID: 1883810318555271701, guid: aa39ba9aaf1ce428f88c7eb9ce7f1680, type: 3}
       propertyPath: shaderVariables.Array.data[5].value
