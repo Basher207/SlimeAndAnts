@@ -1,4 +1,5 @@
 #pragma kernel MarchingCubes
+#pragma kernel ClearUnused
 
 RWStructuredBuffer<float3> VertexBuffer;
 RWStructuredBuffer<float3> NormalBuffer;
@@ -186,12 +187,7 @@ void MarchingCubes (uint3 id : SV_DispatchThreadID)
         // Add the vertices and normals to the buffers
 
         
-        int vertCount = 0;
         
-        // int length = 0;
-        // int stride = 0;
-        // VertexBuffer.GetDimensions(length, stride);
-
         uint count = Counter.IncrementCounter();
         uint firstVertex = count * 3;
         

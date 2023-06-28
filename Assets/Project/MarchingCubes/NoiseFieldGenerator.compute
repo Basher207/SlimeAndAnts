@@ -1,0 +1,72 @@
+#pragma kernel NoiseFieldGenerator
+
+#include "./External/jp.keijiro/Shader/SimplexNoise3D.hlsl"
+
+uint3 Dims;
+float Scale;
+float Time;
+
+RWStructuredBuffer<float> Voxels;
+
+
+float Hash (float3 position)
+{
+    float3 magic = float3(37.0, 17.0, 29.0);
+    return frac(sin(dot(position, magic)) * 143758.5453);
+}
+float Noise (float3 position)
+{
+    float3 floorPos = floor(position);
+    float3 fraction = position - floorPos;
+
+    // Smooth the fraction with fade function.
+    fraction = fraction * fraction * (3.0 - 2.0 * fraction);
+
+    // Hash coordinates of the 8 cube corners.
+    float3 offsets[8] = {
+        float3(-0.5, -0.5, -0.5),
+        float3( 0.5, -0.5, -0.5),
+        float3(-0.5,  0.5, -0.5),
+        float3( 0.5,  0.5, -0.5),
+        float3(-0.5, -0.5,  0.5),
+        float3( 0.5, -0.5,  0.5),
+        float3(-0.5,  0.5,  0.5),
+        float3( 0.5,  0.5,  0.5)
+    };
+
+    float values[8];
+    
+    for (int i = 0; i < 8; i++)
+    {
+        float3 offset = offsets[i];
+        float3 gridPos = floorPos + offset;
+        float value = Hash(gridPos);
+        values[i] = value;
+    }
+
+    // Interpolate between the values.
+    float value = lerp(lerp(lerp(values[0], values[1], fraction.x), lerp(values[2], values[3], fraction.x), fraction.y), lerp(lerp(values[4], values[5], fraction.x), lerp(values[6], values[7], fraction.x), fraction.y), fraction.z);
+    return value;
+}
+
+float fmap(float value, float inMin, float inMax, float outMin, float outMax)
+{
+    return outMin + ((value - inMin) / (inMax - inMin)) * (outMax - outMin);
+}
+[numthreads(8, 8, 8)]
+void NoiseFieldGenerator(uint3 id : SV_DispatchThreadID)
+{
+    // float3 p = Scale * (id + 0.5 - Dims / 2);
+    // float value = -p.y;
+    // value += SimplexNoise(p * 0.83 + float3(-0.37, -0.12, 0) * Time) * 0.5;
+    
+    // float value = sin(id.x * Scale);
+    // value += cos(id.y * Scale);
+    // value += sin(id.z * Scale);
+
+
+    // float value = Noise(id * Scale);// - distanceFromCenter / 100000;
+    float value = pow(1-distance(id, Dims/2)/Dims.x + sin(Time / 10)/10, 6)*12;
+    value += Noise(id * Scale) / 5;
+    Voxels[id.x + (Dims.x * id.y) + (Dims.y * Dims.x * id.z)] = value;
+}
