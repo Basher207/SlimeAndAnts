@@ -73,6 +73,10 @@ public class AntSimulationController : MonoBehaviour
     
     void Start() {
         // Initialize the trail map
+
+        // NEW SHIT
+        SocketServer.OnDataReceived += UpdateShaderVariables;
+
         trailMap = new RenderTexture(2160, 2160, 0, RenderTextureFormat.ARGBFloat);
         trailMap.enableRandomWrite = true;
         trailMap.Create();
@@ -94,6 +98,26 @@ public class AntSimulationController : MonoBehaviour
         antBuffer.SetData(ants);
         
         StartCoroutine(UpdateAnts());
+    }
+
+    void UpdateShaderVariables(Dictionary<string, float> data)
+    {
+        Debug.Log(data);
+        // Loop through the received data and update shaderVariables
+        foreach (var item in data)
+        {
+            Debug.Log(item);
+            foreach (var shaderVar in shaderVariables)
+            {
+                Debug.Log(item.Key);
+                if (shaderVar.name == item.Key)
+                {
+                    Debug.Log(shaderVar.name);
+                    shaderVar.value = item.Value;
+                    break;
+                }
+            }
+        }
     }
 
     
@@ -171,6 +195,7 @@ public class AntSimulationController : MonoBehaviour
     void OnDestroy() {
         antBuffer.Release();
         trailMap.Release();
+        SocketServer.OnDataReceived -= UpdateShaderVariables;
     }
 
     private struct Ant {
