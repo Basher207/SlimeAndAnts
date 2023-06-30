@@ -8,13 +8,31 @@
 // Parameters
 uint3 Dims;
 uint MaxTriangle;
+float4x4 matrixMulti;
+
 float Scale;
 float Isovalue;
+
+float fmap(float value, float inMin, float inMax, float outMin, float outMax)
+{
+    return outMin + ((value - inMin) / (inMax - inMin)) * (outMax - outMin);
+}
+float3 fmap(float3 value, float3 inMin, float3 inMax, float3 outMin, float3 outMax)
+{
+    return float3(fmap(value.x, inMin.x, inMax.x, outMin.x, outMax.x),
+        fmap(value.y, inMin.y, inMax.y, outMin.y, outMax.y),
+        fmap(value.z, inMin.z, inMax.z, outMin.z, outMax.z));
+}
 
 // Grid space to object space transformation
 float3 TransformPoint(float3 p)
 {
-    return (p + 0.5 - Dims / 2) * Scale;
+    p = fmap(p,float3(0,0,0), Dims, float3(-1,-1,-1),float3(1,1,1));
+    
+    float4 multiPos = mul(matrixMulti, float4(p.xyz, 1));
+    p = multiPos.xyz / multiPos.w;
+    
+    return p;
 }
 
 //

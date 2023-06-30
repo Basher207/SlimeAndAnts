@@ -76,7 +76,7 @@ sealed class MeshBuilder : System.IDisposable
 
         // Bounding box
         var ext = new Vector3(_grids.x, _grids.y, _grids.z) * scale;
-        _mesh.bounds = new Bounds(Vector3.zero, ext);
+        _mesh.bounds = new Bounds(Vector3.zero, ext * 1000f);
     }
 
     #endregion

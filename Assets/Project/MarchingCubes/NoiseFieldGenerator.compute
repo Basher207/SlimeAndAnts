@@ -1,9 +1,16 @@
 #pragma kernel NoiseFieldGenerator
 
-#include "./External/jp.keijiro/Shader/SimplexNoise3D.hlsl"
+#include "./Assets/Project/MarchingCubes/External/jp.keijiro/Shader/SimplexNoise3D.hlsl"
 
 uint3 Dims;
-float Scale;
+float4x4 Offset;
+
+float NoiseFrequency;
+float NoiseScale;
+float Radius;
+
+
+
 float Time;
 
 RWStructuredBuffer<float> Voxels;
@@ -49,9 +56,27 @@ float Noise (float3 position)
     return value;
 }
 
+// float SphereSurfaceVisible(float normalisedDistance) {
+//     // Convert normalised distance back to actual distance
+//     float distance = normalisedDistance * Radius;
+//
+//     // Compute the angle of visibility using trigonometry
+//     float visibleAngle = 2.0 * atan(radius / distance);
+//
+//     // Clamp the angle to a maximum of 180 degrees (in radians)
+//     return min(visibleAngle, 3.14159265358979323846);
+// }
+
+
 float fmap(float value, float inMin, float inMax, float outMin, float outMax)
 {
     return outMin + ((value - inMin) / (inMax - inMin)) * (outMax - outMin);
+}
+float3 fmap(float3 value, float3 inMin, float3 inMax, float3 outMin, float3 outMax)
+{
+    return float3(fmap(value.x, inMin.x, inMax.x, outMin.x, outMax.x),
+        fmap(value.y, inMin.y, inMax.y, outMin.y, outMax.y),
+        fmap(value.z, inMin.z, inMax.z, outMin.z, outMax.z));
 }
 [numthreads(8, 8, 8)]
 void NoiseFieldGenerator(uint3 id : SV_DispatchThreadID)
@@ -63,10 +88,27 @@ void NoiseFieldGenerator(uint3 id : SV_DispatchThreadID)
     // float value = sin(id.x * Scale);
     // value += cos(id.y * Scale);
     // value += sin(id.z * Scale);
-
-
+    
+    
     // float value = Noise(id * Scale);// - distanceFromCenter / 100000;
-    float value = pow(1-distance(id, Dims/2)/Dims.x + sin(Time / 10)/10, 6)*12;
-    value += Noise(id * Scale) / 5;
+
+    float3 pos = fmap(id,float3(0,0,0), Dims, float3(-1,-1,-1),float3(1,1,1));
+    
+    float4 multiPos = mul(Offset, float4(pos.xyz, 1));
+    pos = multiPos.xyz / multiPos.w;
+    
+    float distanceFromCenter = length(pos);
+    float normalisedDistanceFromCenter = Radius / distanceFromCenter;
+    
+    // float value = abs(frac((float)id.z/2));// normalisedDistanceFromCenter;
+        
+    // float value = pow(1-distance(pos, Dims/2)/Dims.x + sin(Time / 10)/10, 6)*12;
+    float value = 1 - normalisedDistanceFromCenter;
+    value += clamp(Noise(pos * NoiseFrequency) * NoiseScale, 0, 1);
+    value += clamp(Noise(pos * NoiseFrequency*4) * NoiseScale/4, 0, 1);
+
+
+    // float value = abs(frac((float)id.z/2));
+    
     Voxels[id.x + (Dims.x * id.y) + (Dims.y * Dims.x * id.z)] = value;
 }
