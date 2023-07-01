@@ -92,10 +92,10 @@ void NoiseFieldGenerator(uint3 id : SV_DispatchThreadID)
     
     // float value = Noise(id * Scale);// - distanceFromCenter / 100000;
 
-    float3 pos = fmap(id,float3(0,0,0), Dims, float3(-1,-1,-1),float3(1,1,1));
+    float3 normPos = fmap(id,float3(0,0,0), Dims, float3(-1,-1,-1),float3(1,1,1));
     
-    float4 multiPos = mul(Offset, float4(pos.xyz, 1));
-    pos = multiPos.xyz / multiPos.w;
+    float4 multiPos = mul(Offset, float4(normPos.xyz, 1));
+    float3 pos = multiPos.xyz / multiPos.w;
     
     float distanceFromCenter = length(pos);
     float normalisedDistanceFromCenter = Radius / distanceFromCenter;
@@ -103,12 +103,18 @@ void NoiseFieldGenerator(uint3 id : SV_DispatchThreadID)
     // float value = abs(frac((float)id.z/2));// normalisedDistanceFromCenter;
         
     // float value = pow(1-distance(pos, Dims/2)/Dims.x + sin(Time / 10)/10, 6)*12;
-    float value = 1 - normalisedDistanceFromCenter;
-    value += clamp(Noise(pos * NoiseFrequency) * NoiseScale, 0, 1);
-    value += clamp(Noise(pos * NoiseFrequency*4) * NoiseScale/4, 0, 1);
+    float value = 0;
+
+    value += normalisedDistanceFromCenter;
+    
+    // float distanceScale = (1/fmap(normPos.z, -1, 1, 0, 1));
+    value -= clamp(Noise(pos * NoiseFrequency + float3(-Time,Time,-Time)/4) * NoiseScale, 0, 1);
+    // value += clamp(Noise((pos * NoiseFrequency - float3(Time,Time,Time)/32)*4) * NoiseScale/2, 0, 1);
+    // value += clamp(Noise(pos * NoiseFrequency*32) * NoiseScale/32, 0, 1);
+    // value += clamp(Noise(pos * NoiseFrequency*64) * NoiseScale/64, 0, 1);
 
 
-    // float value = abs(frac((float)id.z/2));
+    // value = fmap(sin(id.z), -1, 1, 0, 1);
     
     Voxels[id.x + (Dims.x * id.y) + (Dims.y * Dims.x * id.z)] = value;
 }

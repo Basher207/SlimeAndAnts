@@ -104,14 +104,15 @@ public class MarchingCubesRunner : MonoBehaviour
     public int distance = 5;
     private void OnDrawGizmos()
     {
-        Matrix4x4 matrix = Gizmos.matrix;
+        
+        // Matrix4x4 matrix = Gizmos.matrix;
         Gizmos.color = Color.white;
 
-        Matrix4x4 camMatrix = GetSheerMatrix;
+        // Matrix4x4 camMatrix = GetSheerMatrix;
         // Gizmos.matrix = GetSheerMatrix;//camera.projectionMatrix;//.transform,transform.parent.localToWorldMatrix;
         
-        Gizmos.DrawWireCube(new Vector3(0f, 0f, 0f), Vector3.one*2f);
-        Gizmos.DrawWireSphere(new Vector3(0f, 0f, 1f), 1f);
+        // Gizmos.DrawWireCube(new Vector3(0f, 0f, 0f), Vector3.one*2f);
+        // Gizmos.DrawWireSphere(new Vector3(0f, 0f, 1f), 1f);
 
         // float maxWidth = 1f;
         // for (int x = -subDivisions; x <= subDivisions; x++)
@@ -134,16 +135,19 @@ public class MarchingCubesRunner : MonoBehaviour
         // }
         if (!Application.isPlaying)
             return;
-        Gizmos.matrix = matrix;
-        GetComponent<MeshRenderer>().sharedMaterial.SetPass(0);
+        // Gizmos.matrix = matrix;
+        // GetComponent<MeshRenderer>().sharedMaterial.SetPass(0);
 
-        Graphics.DrawMeshNow(meshFilter.sharedMesh, Matrix4x4.identity);
+        // Graphics.DrawMeshNow(meshFilter.sharedMesh, Matrix4x4.identity);
         
         
         // trackingGo.transform.position = GetSheerMatrix.MultiplyPoint(camera.transform.position);
         
         Gizmos.color = Color.green;
-        Gizmos.DrawWireSphere(trackingGo.transform.position, 0.2f);
+        
+        
+        // Gizmos.DrawWireSphere(trackingGo.transform.position, 0.2f);
+        // Gizmos.DrawWireMesh(meshBuilder.Mesh, Vector3.zero, Quaternion.identity, Vector3.one);
     }
 
     void OnDestroy()

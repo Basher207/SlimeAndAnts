@@ -140,7 +140,7 @@ void MeshReconstruction(uint3 id : SV_DispatchThreadID)
     // (initialized as a bit field of vertex binary states)
     uint selector = 0;
     for (i = 0; i < 8; i++)
-        selector |= (samples[i].w < Isovalue) << i;
+        selector |= (samples[i].w > Isovalue) << i;
 
     // Special case for empty cubes; Exit ealy if there is no intersection.
     if (selector == 0 || selector == 0xff) return;
