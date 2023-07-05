@@ -1,7 +1,10 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.Serialization;
+using Random = UnityEngine.Random;
 
 public class AntSimulationController : MonoBehaviour
 {
@@ -19,28 +22,6 @@ public class AntSimulationController : MonoBehaviour
         [Header("Only info:")]
         public string comment;
     }
-    // [System.Serializable]
-    // public class ShaderFunctions
-    // {
-    //     [Header("Name of variable in shader")]
-    //     public string name;
-    //     
-    //     
-    //     [Header("(ignore) How is this function being grouped when called")]
-    //     public Vector3Int threadGroupDivider;
-    //
-    //     public bool xThreadGroup = true;
-    //     public bool yThreadGroup = true;
-    //     public bool zThreadGroup = false;
-    //
-    //     public int xThreadGroupSize => xThreadGroup ? threadGroupDivider.x : 1;
-    //     public int yThreadGroupSize => yThreadGroup ? threadGroupDivider.y : 1;
-    //     public int zThreadGroupSize => zThreadGroup ? threadGroupDivider.z : 1;
-    //     
-    //     [Header("Only info:")]
-    //     public string comment;
-    // }
-    
     
     
     [Header("Variables that will be sent to the shader")]
@@ -51,7 +32,7 @@ public class AntSimulationController : MonoBehaviour
     
     
     public float targetFrameRate = 60f;
-    
+    public int textureHeight = 2160;
     
     [Header("Our ant behaviour shader")]
     public ComputeShader computeShader;
@@ -69,6 +50,7 @@ public class AntSimulationController : MonoBehaviour
     private RenderTexture trailMap;
     
     private Ant [] ants;
+    private float currentAspectRatio;
     
     
     void Start() {
@@ -77,10 +59,7 @@ public class AntSimulationController : MonoBehaviour
         // NEW SHIT
         SocketServer.OnDataReceived += UpdateShaderVariables;
 
-        trailMap = new RenderTexture(2160, 2160, 0, RenderTextureFormat.ARGBFloat);
-        trailMap.enableRandomWrite = true;
-        trailMap.Create();
-        materialToApplyTextureOn.mainTexture = trailMap;
+        ReBuildTextureIfNeeded();
         
         // Initialize the ant buffer
         ants = new Ant[numberOfAnts];
@@ -98,6 +77,27 @@ public class AntSimulationController : MonoBehaviour
         antBuffer.SetData(ants);
         
         StartCoroutine(UpdateAnts());
+    }
+
+    private void ReBuildTextureIfNeeded()
+    {
+        float aspectRatio = (float)Screen.width / (float)Screen.height;
+        if (aspectRatio.Equals(currentAspectRatio))
+            return;
+
+        if (trailMap)
+        {
+            Destroy(trailMap);
+        }
+        currentAspectRatio = aspectRatio;
+        
+        int resolutionWidth = Mathf.RoundToInt(textureHeight * aspectRatio);
+        
+        trailMap = new RenderTexture(resolutionWidth, 2160, 0, RenderTextureFormat.ARGBFloat);
+        trailMap.enableRandomWrite = true;
+        trailMap.wrapMode = TextureWrapMode.Repeat;
+        trailMap.Create();
+        materialToApplyTextureOn.mainTexture = trailMap;
     }
 
     void UpdateShaderVariables(Dictionary<string, float> data)
@@ -120,40 +120,17 @@ public class AntSimulationController : MonoBehaviour
         }
     }
 
-    
+    private void Update()
+    {
+        ReBuildTextureIfNeeded();
+    }
+
     //Our ant update loop!
     //This is done as a "Coroutine" (Not important) to make sure we run a specific frame rate
     IEnumerator UpdateAnts() {
         while (true)
         {
             CallShaderFunctions();
-            
-            // antBehaviorShader.SetFloat("time", 1f / targetFrameRate);
-            //
-            // antBehaviorShader.SetFloat("sensorAngle", sensorAngle);
-            // antBehaviorShader.SetFloat("sensorScale", sensorScale);
-            // antBehaviorShader.SetFloat("rotationSpeed", rotationSpeed);
-            // antBehaviorShader.SetFloat("moveSpeed", moveSpeed);
-            //
-            // antBehaviorShader.SetFloat("repulseScale", repulseScale);
-            // antBehaviorShader.SetFloat("attractionScale", attractionScale);
-            // antBehaviorShader.SetFloat("sensorDistance", sensorDistance);
-            //
-            // antBehaviorShader.SetInt("numAnts", currentNumberOfAnts);
-            // antBehaviorShader.SetInts("textureSize", new int[2] { trailMap.width, trailMap.height });
-            // antBehaviorShader.Dispatch(antBehaviorKernel, currentNumberOfAnts / 64, 1, 1);
-            //
-            // // Execute the draw ants shader
-            // int drawAntsKernel = drawAntsShader.FindKernel("CSMain");
-            // drawAntsShader.SetTexture(drawAntsKernel, "trailMap", trailMap);
-            // drawAntsShader.SetBuffer(drawAntsKernel, "antBuffer", antBuffer);
-            // drawAntsShader.SetInts("textureSize", new int[2] { trailMap.width, trailMap.height });
-            // drawAntsShader.Dispatch(drawAntsKernel, currentNumberOfAnts / 64, 1, 1);
-
-            // Execute the diffuse trail shader
-            // int diffuseTrailKernel = diffuseTrailShader.FindKernel("CSMain");
-            // diffuseTrailShader.Dispatch(diffuseTrailKernel, trailMap.width / 8, trailMap.height / 8, 1);
-
             yield return new WaitForSeconds(1f / targetFrameRate);
         }
     }
@@ -171,6 +148,17 @@ public class AntSimulationController : MonoBehaviour
         computeShader.SetFloat("time", 1f / targetFrameRate);
         computeShader.SetInt("numberOfAnts", numberOfAnts);
         computeShader.SetInts("textureSize", new int[2] { trailMap.width, trailMap.height });
+        computeShader.SetVector("positionRange",  new Vector2((float)trailMap.width / (float)trailMap.height, 1f));
+        computeShader.SetFloat("aspectRatio", (float)trailMap.width / (float)trailMap.height);
+
+
+        Vector2 mousePos = Input.mousePosition / (float)Screen.height;
+        if (mousePos.x < 0f || mousePos.x > currentAspectRatio || mousePos.y < 0f || mousePos.y > 1f)
+        {
+            mousePos = new Vector2((float)trailMap.width / (float)trailMap.height, 1f) / 2f;
+        }
+            
+        computeShader.SetVector("mousePos", mousePos);
         
         
         int updateAntsKernel = computeShader.FindKernel("UpdateAnts");
