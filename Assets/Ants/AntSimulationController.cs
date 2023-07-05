@@ -78,6 +78,7 @@ public class AntSimulationController : MonoBehaviour
         SocketServer.OnDataReceived += UpdateShaderVariables;
 
         trailMap = new RenderTexture(2160, 2160, 0, RenderTextureFormat.ARGBFloat);
+        
         trailMap.enableRandomWrite = true;
         trailMap.Create();
         materialToApplyTextureOn.mainTexture = trailMap;

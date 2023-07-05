@@ -314,7 +314,7 @@ void DrawAnts (uint3 id : SV_DispatchThreadID) {
         int2 pos = ant.position * textureSize;
         
         // Draw the ant onto the trail map
-        float4 newColor = float4(1, 0.2, 0.02, 1);
+        float4 newColor = float4(1, 0.3, 0.1, 1);
         if (newColor.b > 0.8)
         {
             // newColor.r -= fmap(newColor.b, 0.8, 1, 0, 1);
