@@ -1,6 +1,6 @@
-#pragma kernel NoiseFieldGenerator
 
-#include "./Assets/Project/MarchingCubes/External/jp.keijiro/Shader/SimplexNoise3D.hlsl"
+#ifndef _PLANETOID_MATH
+#define _PLANETOID_MATH
 
 uint3 Dims;
 float4x4 Offset;
@@ -8,12 +8,7 @@ float4x4 Offset;
 float NoiseFrequency;
 float NoiseScale;
 float Radius;
-
-
-
 float Time;
-
-RWStructuredBuffer<float> Voxels;
 
 
 float Hash (float3 position)
@@ -72,31 +67,31 @@ float fmap(float value, float inMin, float inMax, float outMin, float outMax)
 {
     return outMin + ((value - inMin) / (inMax - inMin)) * (outMax - outMin);
 }
+
 float3 fmap(float3 value, float3 inMin, float3 inMax, float3 outMin, float3 outMax)
 {
     return float3(fmap(value.x, inMin.x, inMax.x, outMin.x, outMax.x),
         fmap(value.y, inMin.y, inMax.y, outMin.y, outMax.y),
         fmap(value.z, inMin.z, inMax.z, outMin.z, outMax.z));
 }
-[numthreads(8, 8, 8)]
-void NoiseFieldGenerator(uint3 id : SV_DispatchThreadID)
-{
-    // float3 p = Scale * (id + 0.5 - Dims / 2);
-    // float value = -p.y;
-    // value += SimplexNoise(p * 0.83 + float3(-0.37, -0.12, 0) * Time) * 0.5;
-    
-    // float value = sin(id.x * Scale);
-    // value += cos(id.y * Scale);
-    // value += sin(id.z * Scale);
-    
-    
-    // float value = Noise(id * Scale);// - distanceFromCenter / 100000;
 
-    float3 normPos = fmap(id,float3(0,0,0), Dims, float3(-1,-1,-1),float3(1,1,1));
-    
-    float4 multiPos = mul(Offset, float4(normPos.xyz, 1));
-    float3 pos = multiPos.xyz / multiPos.w;
-    
+float MakeDepthMoreLinear(float zNDC)
+{
+    // First, normalize zNDC from [-1,1] to [0,1]
+    float zNormalized = (zNDC + 1) / 2;
+
+    // Then, apply the square root function to make the depth more linear
+    // This function will distribute values more evenly when original values are biased towards 1
+    float zLinear = pow(abs(zNormalized), 0.1);
+
+    // Then, convert it back to [-1,1]
+    float zLinearNDC = zLinear * 2 - 1;
+
+    return zLinearNDC;
+}
+
+float ValueAtPont (float3 pos)
+{
     float distanceFromCenter = length(pos);
     float normalisedDistanceFromCenter = Radius / distanceFromCenter;
     
@@ -106,15 +101,42 @@ void NoiseFieldGenerator(uint3 id : SV_DispatchThreadID)
     float value = 0;
 
     value += normalisedDistanceFromCenter;
-    
+
     // float distanceScale = (1/fmap(normPos.z, -1, 1, 0, 1));
-    value -= clamp(Noise(pos * NoiseFrequency + float3(-Time,Time,-Time)/4) * NoiseScale, 0, 1);
+    value -= clamp(Noise(pos * NoiseFrequency / 30) * 0.1, 0, 1);
+    // value -= clamp(Noise(pos * NoiseFrequency ) * NoiseScale, 0, 1);
+    // value -= clamp(Noise((pos * NoiseFrequency ) * 0.2) * NoiseScale, 0, 1);
     // value += clamp(Noise((pos * NoiseFrequency - float3(Time,Time,Time)/32)*4) * NoiseScale/2, 0, 1);
     // value += clamp(Noise(pos * NoiseFrequency*32) * NoiseScale/32, 0, 1);
     // value += clamp(Noise(pos * NoiseFrequency*64) * NoiseScale/64, 0, 1);
 
 
     // value = fmap(sin(id.z), -1, 1, 0, 1);
-    
-    Voxels[id.x + (Dims.x * id.y) + (Dims.y * Dims.x * id.z)] = value;
+
+    return value;
 }
+
+float3 ScreenToWorldPoint (float3 screenPoint)
+{
+    screenPoint.z = MakeDepthMoreLinear(screenPoint.z);
+    
+    float4 multiPos = mul(Offset, float4(screenPoint.xyz, 1));
+    return multiPos.xyz / multiPos.w;
+}
+
+float3 GridPointToWorldPoint(uint3 gridPoint)
+{
+    return fmap(gridPoint,float3(0,0,0), Dims, float3(-1,-1,-1),float3(1,1,1));
+}
+
+float ValueAtGridPoint(uint3 gridPoint)
+{
+    return ValueAtPont(GridPointToWorldPoint(gridPoint));
+}
+
+float ValueAtScreenPoint (float3 pos)
+{
+    return ValueAtPont(ScreenToWorldPoint(pos));
+}
+
+#endif

@@ -1,38 +1,32 @@
 #pragma kernel MeshReconstruction
 #pragma kernel ClearUnused
 
+#include "./PlanetoidMath.hlsl"
+
 // Workaround for the absence of sizeof operator in HLSL
 #define SIZEOF_UINT 4
 #define SIZEOF_FLOAT3 12
 
+
 // Parameters
-uint3 Dims;
 uint MaxTriangle;
 float4x4 matrixMulti;
 
 float Scale;
 float Isovalue;
 
-float fmap(float value, float inMin, float inMax, float outMin, float outMax)
-{
-    return outMin + ((value - inMin) / (inMax - inMin)) * (outMax - outMin);
-}
-float3 fmap(float3 value, float3 inMin, float3 inMax, float3 outMin, float3 outMax)
-{
-    return float3(fmap(value.x, inMin.x, inMax.x, outMin.x, outMax.x),
-        fmap(value.y, inMin.y, inMax.y, outMin.y, outMax.y),
-        fmap(value.z, inMin.z, inMax.z, outMin.z, outMax.z));
-}
+RWStructuredBuffer<float> Voxels;
 
 // Grid space to object space transformation
-float3 TransformPoint(float3 p)
+float3 TransformPoint(float3 pos)
 {
-    p = fmap(p,float3(0,0,0), Dims, float3(-1,-1,-1),float3(1,1,1));
+    pos = fmap(pos,float3(0,0,0), Dims, float3(-1,-1,-1),float3(1,1,1));
     
-    float4 multiPos = mul(matrixMulti, float4(p.xyz, 1));
-    p = multiPos.xyz / multiPos.w;
+    pos.z = MakeDepthMoreLinear(pos.z);
+    float4 multiPos = mul(matrixMulti, float4(pos.xyz, 1));
+    pos = multiPos.xyz / multiPos.w;
     
-    return p;
+    return pos;
 }
 
 //
@@ -47,11 +41,6 @@ uint EdgeIndexFromTriangleTable(uint2 data, uint index)
                                data.y >> ((index - 8) * 4));
 }
 
-//
-// Input voxels
-//
-
-StructuredBuffer<float> Voxels;
 
 float VoxelValue(uint x, uint y, uint z)
 {
