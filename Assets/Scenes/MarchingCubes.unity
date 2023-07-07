@@ -253,13 +253,13 @@ MonoBehaviour:
   shader: {fileID: 7200000, guid: 4b823c338a4e0416e967397e4b3c12f6, type: 3}
   voxelShader: {fileID: 7200000, guid: 5b204f47eb286433eb7bc57fbff587f8, type: 3}
   meshFilter: {fileID: 682198724}
-  cubeSize: {x: 128, y: 128, z: 2048}
+  cubeSize: {x: 128, y: 128, z: 1024}
   camera: {fileID: 963194227}
   noiseFrequency: 5
   noiseScale: 0.02
   threshold: 0.5
   radius: 30
-  triangleBudget: 2500000
+  triangleBudget: 1000000
   trackingGo: {fileID: 1534681878}
   subDivisions: 5
   distance: 255
@@ -416,8 +416,8 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.4
-  far clip plane: 40
+  near clip plane: 0.1
+  far clip plane: 100
   field of view: 60
   orthographic: 0
   orthographic size: 5.35

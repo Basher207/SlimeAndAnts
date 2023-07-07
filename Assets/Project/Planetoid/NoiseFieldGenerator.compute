@@ -1,0 +1,12 @@
+#pragma kernel NoiseFieldGenerator
+
+#include "./PlanetoidMath.hlsl"
+
+RWStructuredBuffer<float> Voxels;
+
+[numthreads(8, 8, 8)]
+void NoiseFieldGenerator(uint3 index : SV_DispatchThreadID)
+{
+    float val = ValueAtGridPoint(index);
+    Voxels[index.x + (Dims.x * index.y) + (Dims.y * Dims.x * index.z)] = val;
+}
