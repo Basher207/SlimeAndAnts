@@ -43,6 +43,8 @@ public class MarchingCubesRunner : MonoBehaviour
 
     private void LateUpdate()
     {
+        if (Input.GetKey(KeyCode.Space))
+            return;
         // transform.localPosition = (Vector3)cubeSize / 2;
         
         shaderKernalIndex = shader.FindKernel("NoiseFieldGenerator");
@@ -59,7 +61,7 @@ public class MarchingCubesRunner : MonoBehaviour
         shader.SetBuffer(shaderKernalIndex, "Voxels", voxelBuffer);
         shader.DispatchThreads(shaderKernalIndex, cubeSize);
 
-        voxelShader.SetMatrix("matrixMulti", GetSheerMatrix);
+        voxelShader.SetMatrix("Offset", GetSheerMatrix);
         
         // Isosurface reconstruction
         meshBuilder.BuildIsosurface(voxelBuffer, threshold, 2f / cubeSize.x);

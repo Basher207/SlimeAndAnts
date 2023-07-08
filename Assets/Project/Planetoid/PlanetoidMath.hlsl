@@ -82,7 +82,7 @@ float MakeDepthMoreLinear(float zNDC)
 
     // Then, apply the square root function to make the depth more linear
     // This function will distribute values more evenly when original values are biased towards 1
-    float zLinear = pow(abs(zNormalized), 0.1);
+    float zLinear = pow(abs(zNormalized), 0.004);
 
     // Then, convert it back to [-1,1]
     float zLinearNDC = zLinear * 2 - 1;
@@ -103,8 +103,9 @@ float ValueAtPont (float3 pos)
     value += normalisedDistanceFromCenter;
 
     // float distanceScale = (1/fmap(normPos.z, -1, 1, 0, 1));
-    value -= clamp(Noise(pos * NoiseFrequency / 30) * 0.1, 0, 1);
-    // value -= clamp(Noise(pos * NoiseFrequency ) * NoiseScale, 0, 1);
+    value -= clamp(Noise(pos * NoiseFrequency / 30) * NoiseScale, 0, 1);
+    value -= clamp(sin(pos.x + pos.y + pos.y)/20 * NoiseScale, 0, 1);
+    value += sin(clamp(pos.y/100, 0, 1));
     // value -= clamp(Noise((pos * NoiseFrequency ) * 0.2) * NoiseScale, 0, 1);
     // value += clamp(Noise((pos * NoiseFrequency - float3(Time,Time,Time)/32)*4) * NoiseScale/2, 0, 1);
     // value += clamp(Noise(pos * NoiseFrequency*32) * NoiseScale/32, 0, 1);
@@ -126,11 +127,12 @@ float3 ScreenToWorldPoint (float3 screenPoint)
 
 float3 GridPointToWorldPoint(uint3 gridPoint)
 {
-    return fmap(gridPoint,float3(0,0,0), Dims, float3(-1,-1,-1),float3(1,1,1));
+    return ScreenToWorldPoint(fmap(gridPoint,float3(0,0,0), Dims, float3(-1,-1,-1),float3(1,1,1)));
 }
 
 float ValueAtGridPoint(uint3 gridPoint)
 {
+    // return gridPoint.z % 10;
     return ValueAtPont(GridPointToWorldPoint(gridPoint));
 }
 
