@@ -3,12 +3,12 @@
 #ifndef _PLANETOID_MATH
 #define _PLANETOID_MATH
 
-SamplerState sampler_linear_clamp
-{
-    Filter = MIN_MAG_MIP_LINEAR;
-    AddressU = Clamp;
-    AddressV = Clamp;
-};
+// SamplerState sampler_linear_clamp
+// {
+//     Filter = MIN_MAG_MIP_LINEAR;
+//     AddressU = Clamp;
+//     AddressV = Clamp;
+// };
 
 #define PI 3.14159265
 
@@ -95,7 +95,7 @@ float MakeDepthMoreLinear(float zNDC)
     // First, normalize zNDC from [-1,1] to [0,1]
     float zNormalized = (zNDC + 1) / 2;
     
-    float multi = 0.1;
+    float multi = 0.01;
     // Then, apply the square root function to make the depth more linear
     // This function will distribute values more evenly when original values are biased towards 1
     float zLinear = pow(abs(zNormalized), multi);
@@ -110,110 +110,110 @@ float MakeDepthMoreLinear(float zNDC)
 
     return zLinearNDC;
 }
-float2 SpherePosToUV(float3 pos)
+float2 PosToUV(float3 pos)
 {
-    // Normalize the position vector
-    float3 norm_pos = normalize(pos);
-
-    // Convert the 3D vector to spherical coordinates (latitude and longitude)
-    float longitude = atan2(norm_pos.z, norm_pos.x);
-    float latitude = asin(norm_pos.y);
-
-    // Normalize the spherical coordinates to the range [0, 1]
-    float u = (longitude + PI) / (2.0 * PI);
-    float v = (latitude + PI / 2.0) / PI;
-
-    return float2(u, v);
-}
-float HeightAtPos(float3 pos)
-{
-    // Normalize the position vector
-    float3 norm_pos = normalize(pos);
-
-    // Convert the 3D vector to spherical coordinates (latitude and longitude)
-    float longitude = atan2(norm_pos.z, norm_pos.x);
-    float latitude = asin(norm_pos.y);
-
-    // Normalize the spherical coordinates to the range [0, 1]
-    float u = (longitude + PI) / (2.0 * PI);
-    float v = (latitude + PI / 2.0) / PI;
-
+    return float2(pos.x, pos.z);
     int textureWidth, textureHeight;
     HeightMapTexture.GetDimensions(textureWidth, textureHeight);
 
-    // Convert texture coordinates to pixel coordinates
-    float uf = u * textureWidth;
-    float vf = v * textureHeight;
+    // Convert the x and z coordinates to texture coordinates
+    float u = round(pos.x / textureWidth);
+    float v = round(pos.z / textureHeight);
 
-    // Separate into integer and fractional parts
-    int ui = (int)uf;
-    int vi = (int)vf;
-    float ufrac = uf - ui;
-    float vfrac = vf - vi;
-
-    // Fetch the height values from the four neighboring pixels
-    float h00 = HeightMapTexture[clamp(int2(ui, vi), 0, int2(textureWidth - 1, textureHeight - 1))].r;
-    float h10 = HeightMapTexture[clamp(int2(ui + 1, vi), 0, int2(textureWidth - 1, textureHeight - 1))].r;
-    float h01 = HeightMapTexture[clamp(int2(ui, vi + 1), 0, int2(textureWidth - 1, textureHeight - 1))].r;
-    float h11 = HeightMapTexture[clamp(int2(ui + 1, vi + 1), 0, int2(textureWidth - 1, textureHeight - 1))].r;
-
-    // Perform bilinear interpolation
-    float height = lerp(lerp(h00, h10, ufrac), lerp(h01, h11, ufrac), vfrac);
+    u = (u + textureWidth) % textureWidth;
+    v = (v + textureHeight) % textureHeight;
     
-    float relevantEnd = 0.05;
-    
-    bool land = height > WaterThreshold;
-
-    float heightFromWater = height - WaterThreshold;
-    if (land)
-    {
-        heightFromWater = pow(heightFromWater, relevantEnd);
-        heightFromWater = fmap(heightFromWater, 0.7, 1, 0, 1);//clamp(fmap(height, , -100, 100);
-    }
-    height = WaterThreshold + heightFromWater;
-    
-
-    float finalHeight = Radius + ((height) * HeightDelta);
+    return float2(u,v);//HeightMapTexture[PosToUV(pos)].r;//int2(u,v)].r;
 
     
-    if (!land)
-        finalHeight -= 0.1;//pow(height, 1.5);
-    return finalHeight;
+    // Normalize the position vector
+    // float3 norm_pos = normalize(pos);
+    //
+    // // Convert the 3D vector to spherical coordinates (latitude and longitude)
+    // float longitude = atan2(norm_pos.z, norm_pos.x);
+    // float latitude = asin(norm_pos.y);
+    //
+    // // Normalize the spherical coordinates to the range [0, 1]
+    // float u = (longitude + PI) / (2.0 * PI);
+    // float v = (latitude + PI / 2.0) / PI;
+    //
+    // return float2(u, v);
+}
+
+float HeightAtPos(float3 pos)
+{
+    int textureWidth, textureHeight;
+    HeightMapTexture.GetDimensions(textureWidth, textureHeight);
+    float2 uvs = PosToUV(pos);
+    int2 pixelPos = (int2)(uvs / int2(textureWidth, textureHeight));
+    
+    return HeightMapTexture[pixelPos].r;//int2(u,v)].r;
+    
+    // int textureWidth, textureHeight;
+    // HeightMapTexture.GetDimensions(textureWidth, textureHeight);
+    //
+    // // Convert the x and z coordinates to texture coordinates
+    // int u = pos.x / textureWidth;
+    // int v = pos.z / textureHeight;
+    //
+    // u = (u + textureWidth) % textureWidth;
+    // v = (u + textureHeight) % textureHeight;
+    //
+    // return HeightMapTexture[PosToUV(pos)].r;//int2(u,v)].r;
+    //
+    // // Fetch the height values from the four neighboring pixels
+    //
+    // float h00 = HeightMapTexture[clamp(int2(u, v), 0, int2(textureWidth - 1, textureHeight - 1))].r;
+    // float h10 = HeightMapTexture[clamp(int2(u + 1, v), 0, int2(textureWidth - 1, textureHeight - 1))].r;
+    // float h01 = HeightMapTexture[clamp(int2(u, v + 1), 0, int2(textureWidth - 1, textureHeight - 1))].r;
+    // float h11 = HeightMapTexture[clamp(int2(u + 1, v + 1), 0, int2(textureWidth - 1, textureHeight - 1))].r;
+    //
+    // // Perform bilinear interpolation
+    // float height = lerp(lerp(h00, h10, u), lerp(h01, h11, u), v);
+    // return height;
+    //
+    // float relevantEnd = 0.05;
+    //
+    // bool land = height > WaterThreshold;
+    //
+    // float heightFromWater = height - WaterThreshold;
+    // if (land)
+    // {
+    //     heightFromWater = pow(heightFromWater, relevantEnd);
+    //     heightFromWater = fmap(heightFromWater, 0.7, 1, 0, 1);
+    // }
+    // height = WaterThreshold + heightFromWater;
+    //
+    //
+    // float finalHeight = Radius + ((height) * HeightDelta);
+    //
+    //
+    // if (!land)
+    //     finalHeight -= 0.1;
+    //
+    // return finalHeight;
 }
 
 
-float ValueAtPont (float3 pos)
+
+float ValueAtPoint (float3 pos)
 {
-    float distanceFromCenter = length(pos);
-    float heightAtPoint = HeightAtPos(pos);
-    float normalisedDistanceFromCenter = distanceFromCenter/heightAtPoint;
+    float heightAtPoint = pos.x + pos.z;//HeightAtPos(pos);
+    float normalisedHeight = abs(pos.y);//pos.y/heightAtPoint;
     
-    // float value = abs(frac((float)id.z/2));// normalisedDistanceFromCenter;
-        
-    // float value = pow(1-distance(pos, Dims/2)/Dims.x + sin(Time / 10)/10, 6)*12;
     float value = 0;
-
-    value += normalisedDistanceFromCenter;
+    value += normalisedHeight;
     
-    // float distanceScale = (1/fmap(normPos.z, -1, 1, 0, 1));
-    float noise = Noise(pos * NoiseFrequency / 30) * NoiseScale;
-    
-    if (noise > 0.999)
-    {
-        value += noise - 0.999;
-    }
-    // value -= clamp(sin(pos.x + pos.y + pos.y)/20 * NoiseScale, 0, 1);
-    // value += sin(clamp(pos.y/100, 0, 1));
-    // value -= clamp(Noise((pos q * NoiseFrequency ) * 0.2) * NoiseScale, 0, 1);
-    // value += clamp(Noise((pos * NoiseFrequency - float3(Time,Time,Time)/32)*4) * NoiseScale/2, 0, 1);
-    // value += clamp(Noise(pos * NoiseFrequency*32) * NoiseScale/32, 0, 1);
-    // value += clamp(Noise(pos * NoiseFrequency*64) * NoiseScale/64, 0, 1);
-
-
-    // value = fmap(sin(id.z), -1, 1, 0, 1);
+    // float noise = Noise(pos * NoiseFrequency / 30) * NoiseScale;
+    //
+    // if (noise > 0.999)
+    // {
+    //     value += noise - 0.999;
+    // }
 
     return value;
 }
+
 
 float3 ScreenToWorldPoint (float3 screenPoint)
 {
@@ -260,12 +260,12 @@ float ValueAtGridPoint(uint3 gridPoint)
 {
     // return gridPoint.z % 10;
     
-    return ValueAtPont(GridPointToWorldPoint(gridPoint));
+    return ValueAtPoint(GridPointToWorldPoint(gridPoint));
 }
 
 float ValueAtScreenPoint (float3 pos)
 {
-    return ValueAtPont(ScreenToWorldPoint(pos));
+    return ValueAtPoint(ScreenToWorldPoint(pos));
 }
 
 #endif

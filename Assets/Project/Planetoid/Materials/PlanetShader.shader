@@ -38,21 +38,14 @@ Shader "Custom/PlanetShader" {
             
 #define PI 3.14159265
             
-            float2 SpherePosToUV(float3 pos)
+            float2 PosToUV(float3 pos)
             {
-                // Normalize the position vector
-                float3 norm_pos = normalize(pos);
-            
-                // Convert the 3D vector to spherical coordinates (latitude and longitude)
-                float longitude = atan2(norm_pos.z, norm_pos.x);
-                float latitude = asin(norm_pos.y);
-            
-                // Normalize the spherical coordinates to the range [0, 1]
-                float u = (longitude + PI) / (2.0 * PI);
-                float v = (latitude + PI / 2.0) / PI;
+                float u = pos.x * _MainTex_ST.x + _MainTex_ST.z;
+                float v = pos.z * _MainTex_ST.y + _MainTex_ST.w;
             
                 return float2(u, v);
             }
+            
             v2f vert (appdata v) {
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
@@ -65,7 +58,7 @@ Shader "Custom/PlanetShader" {
                float3 pos = normalize(i.posWorld.xyz);
 
                // Get UV coordinates from 3D position
-               float2 uv = SpherePosToUV(pos);
+               float2 uv = PosToUV(pos);
 
                // Sample height at (u, v)
                float height = tex2Dlod(_MainTex, float4(uv, 0, 0)).r;

@@ -160,7 +160,7 @@ void MeshReconstruction(uint3 id : SV_DispatchThreadID)
         float param = (Isovalue - sample1.w) / (sample2.w - sample1.w);
         vertices[i] = TransformPoint(lerp(vertex1, vertex2, param));
         normals[i] = TransformNormal(sample1.xyz, sample2.xyz, param);//-normalize(lerp(sample1.xyz, sample2.xyz, param));
-        uvs[i] = SpherePosToUV(vertices[i]);
+        uvs[i] = PosToUV(vertices[i]);
     }
 
     // Output triangles in the selected cube configuration.
@@ -177,8 +177,8 @@ void MeshReconstruction(uint3 id : SV_DispatchThreadID)
 
         uint vidx = count * 3;
         WriteVertex(vidx + 0, vertices[e1], normals[e1], uvs[e1]);
-        WriteVertex(vidx + 1, vertices[e2], normals[e2], uvs[e1]);
-        WriteVertex(vidx + 2, vertices[e3], normals[e3], uvs[e1]);
+        WriteVertex(vidx + 1, vertices[e2], normals[e2], uvs[e2]);
+        WriteVertex(vidx + 2, vertices[e3], normals[e3], uvs[e3]);
         WriteIndices(vidx, uint3(vidx, vidx + 1, vidx + 2));
     }
 }
