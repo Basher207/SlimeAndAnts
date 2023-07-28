@@ -4,6 +4,7 @@
 // Workaround for the absence of sizeof operator in HLSL
 #define SIZEOF_UINT 4
 #define SIZEOF_FLOAT3 12
+#define SIZEOF_FLOAT2 8
 
 #include "PlanetoidMath.hlsl"
 
@@ -14,7 +15,6 @@ float4x4 matrixMulti;
 float Scale;
 float Isovalue;
 
-
 // Grid space to object space transformation
 float3 TransformPoint(float3 p)
 {
@@ -24,6 +24,11 @@ float3 TransformPoint(float3 p)
     // p = multiPos.xyz / multiPos.w;
     
     return p;
+}
+float3 TransformNormal(float3 sample1, float3 sample2, float param)
+{
+    float3 transformedNormal = normalize(lerp(sample1.xyz, sample2.xyz, param));
+    return normalize(ScreenToWorldDirection(transformedNormal));
 }
 
 //
@@ -73,12 +78,15 @@ RWByteAddressBuffer IndexBuffer;
 RWStructuredBuffer<uint> Counter; // used only for counting
 
 // Vertex buffer accessor
-void WriteVertex(uint offset, float3 p, float3 n)
+void WriteVertex(uint offset, float3 p, float3 n, float2 uv)
 {
-    uint addr_p = offset * SIZEOF_FLOAT3 * 2;
+    uint addr_p = offset * SIZEOF_FLOAT3 * 3;
     uint addr_n = addr_p + SIZEOF_FLOAT3;
+    uint addr_uv = addr_n + SIZEOF_FLOAT3;
+    
     VertexBuffer.Store3(addr_p, asuint(p));
     VertexBuffer.Store3(addr_n, asuint(n));
+    VertexBuffer.Store2(addr_uv, asuint(uv));
 }
 
 // Index buffer accessor
@@ -131,7 +139,7 @@ void MeshReconstruction(uint3 id : SV_DispatchThreadID)
     // (initialized as a bit field of vertex binary states)
     uint selector = 0;
     for (i = 0; i < 8; i++)
-        selector |= (samples[i].w > Isovalue) << i;
+        selector |= (samples[i].w < Isovalue) << i;
 
     // Special case for empty cubes; Exit ealy if there is no intersection.
     if (selector == 0 || selector == 0xff) return;
@@ -141,6 +149,7 @@ void MeshReconstruction(uint3 id : SV_DispatchThreadID)
     // including ones without an intersection.
     float3 vertices[12];
     float3 normals[12];
+    float2 uvs[12];
     for (i = 0; i < 12; i++)
     {
         uint2 pair = EdgeVertexPair(i);
@@ -150,7 +159,8 @@ void MeshReconstruction(uint3 id : SV_DispatchThreadID)
         float3 vertex2 = id + CubeVertex(pair.y);
         float param = (Isovalue - sample1.w) / (sample2.w - sample1.w);
         vertices[i] = TransformPoint(lerp(vertex1, vertex2, param));
-        normals[i] = -normalize(lerp(sample1.xyz, sample2.xyz, param));
+        normals[i] = TransformNormal(sample1.xyz, sample2.xyz, param);//-normalize(lerp(sample1.xyz, sample2.xyz, param));
+        uvs[i] = SpherePosToUV(vertices[i]);
     }
 
     // Output triangles in the selected cube configuration.
@@ -166,9 +176,9 @@ void MeshReconstruction(uint3 id : SV_DispatchThreadID)
         if (count >= MaxTriangle) return;
 
         uint vidx = count * 3;
-        WriteVertex(vidx + 0, vertices[e1], normals[e1]);
-        WriteVertex(vidx + 1, vertices[e2], normals[e2]);
-        WriteVertex(vidx + 2, vertices[e3], normals[e3]);
+        WriteVertex(vidx + 0, vertices[e1], normals[e1], uvs[e1]);
+        WriteVertex(vidx + 1, vertices[e2], normals[e2], uvs[e1]);
+        WriteVertex(vidx + 2, vertices[e3], normals[e3], uvs[e1]);
         WriteIndices(vidx, uint3(vidx, vidx + 1, vidx + 2));
     }
 }
@@ -185,9 +195,9 @@ void ClearUnused(uint id : SV_DispatchThreadID)
         uint count = Counter.IncrementCounter();
         if (count >= MaxTriangle) break;
         uint vidx = count * 3;
-        WriteVertex(vidx + 0, 0, 0);
-        WriteVertex(vidx + 1, 0, 0);
-        WriteVertex(vidx + 2, 0, 0);
+        WriteVertex(vidx + 0, 0, 0, 0);
+        WriteVertex(vidx + 1, 0, 0, 0);
+        WriteVertex(vidx + 2, 0, 0, 0);
         WriteIndices(vidx, uint3(0, 0, 0));
     }
 }

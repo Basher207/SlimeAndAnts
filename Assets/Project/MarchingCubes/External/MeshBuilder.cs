@@ -126,8 +126,12 @@ sealed class MeshBuilder : System.IDisposable
         var vn = new VertexAttributeDescriptor
           (VertexAttribute.Normal, VertexAttributeFormat.Float32, 3);
 
+        // Vertex normal: float32 x 3
+        var vUV = new VertexAttributeDescriptor
+            (VertexAttribute.TexCoord0, VertexAttributeFormat.Float32, 3);
+        
         // Vertex/index buffer formats
-        _mesh.SetVertexBufferParams(vertexCount, vp, vn);
+        _mesh.SetVertexBufferParams(vertexCount, vp, vn, vUV);
         _mesh.SetIndexBufferParams(vertexCount, IndexFormat.UInt32);
 
         // Submesh initialization

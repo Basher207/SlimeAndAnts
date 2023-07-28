@@ -24,7 +24,9 @@ public class CameraMovement : MonoBehaviour
     
     void Update()
     {
-        Vector3 movement = new Vector3(Input.GetAxis("Horizontal"), 0f , Input.GetAxis("Vertical"));
+        float upDownMovement = (Input.GetKey(KeyCode.Q) ? -1 : 0) + (Input.GetKey(KeyCode.E) ? 1 : 0);
+        
+        Vector3 movement = new Vector3(Input.GetAxis("Horizontal"), upDownMovement , Input.GetAxis("Vertical"));
         movement = transform.TransformDirection(movement);
         float speedMulti = Input.GetKey(KeyCode.LeftShift) ? shiftMoveSpeed : moveSpeed;
         

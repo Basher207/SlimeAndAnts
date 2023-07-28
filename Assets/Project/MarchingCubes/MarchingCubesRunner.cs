@@ -10,6 +10,8 @@ public class MarchingCubesRunner : MonoBehaviour
     public ComputeShader shader;
     public ComputeShader voxelShader;
 
+    public Texture heightMapTexture;
+    
     public MeshFilter meshFilter;
     public Vector3Int cubeSize = new Vector3Int(64, 64, 64);
     public Camera camera;
@@ -20,6 +22,8 @@ public class MarchingCubesRunner : MonoBehaviour
     
     public float threshold = 0.5f;
     public float radius = 100f;    
+    public float heightDelta = 100f;
+    public float waterThreshold;
 
     private Mesh mesh;
 
@@ -55,13 +59,18 @@ public class MarchingCubesRunner : MonoBehaviour
         shader.SetFloat("NoiseScale", noiseScale);
         shader.SetFloat("NoiseFrequency", noiseFrequency);
         shader.SetFloat("Time", Time.time);
-        shader.SetFloat("Radius", radius/2f);
+        shader.SetFloat("Radius", radius);
+        shader.SetFloat("HeightDelta", heightDelta);
+        shader.SetFloat("WaterThreshold", waterThreshold);
 
         shader.SetMatrix("Offset", GetSheerMatrix);// transform.parent.localToWorldMatrix);
+        shader.SetMatrix("OffsetIT", GetSheerMatrix.inverse.transpose);
+        shader.SetTexture(shaderKernalIndex, "HeightMapTexture", heightMapTexture);
         shader.SetBuffer(shaderKernalIndex, "Voxels", voxelBuffer);
         shader.DispatchThreads(shaderKernalIndex, cubeSize);
 
         voxelShader.SetMatrix("Offset", GetSheerMatrix);
+        voxelShader.SetMatrix("OffsetIT", GetSheerMatrix.inverse.transpose);
         
         // Isosurface reconstruction
         meshBuilder.BuildIsosurface(voxelBuffer, threshold, 2f / cubeSize.x);
