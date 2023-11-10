@@ -52,7 +52,9 @@ public class MarchingCubesRunner : MonoBehaviour
         // transform.localPosition = (Vector3)cubeSize / 2;
         
         shaderKernalIndex = shader.FindKernel("NoiseFieldGenerator");
-
+        
+        
+        
         // Instantiate(meshBuilder);
         // Noise field update
         shader.SetInts("Dims", cubeSize);

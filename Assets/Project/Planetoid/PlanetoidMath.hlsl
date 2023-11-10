@@ -159,17 +159,17 @@ float HeightAtPos(float3 pos)
 
     // Perform bilinear interpolation
     float height = lerp(lerp(h00, h10, ufrac), lerp(h01, h11, ufrac), vfrac);
-    
+    return pow(height, 1)*10 + Radius;
     float relevantEnd = 0.05;
     
     bool land = height > WaterThreshold;
 
     float heightFromWater = height - WaterThreshold;
-    if (land)
-    {
+    // if (land)
+    // {
         heightFromWater = pow(heightFromWater, relevantEnd);
         heightFromWater = fmap(heightFromWater, 0.7, 1, 0, 1);//clamp(fmap(height, , -100, 100);
-    }
+    // }
     height = WaterThreshold + heightFromWater;
     
 
@@ -259,8 +259,8 @@ float3 GridPointToWorldPoint(uint3 gridPoint)
 float ValueAtGridPoint(uint3 gridPoint)
 {
     // return gridPoint.z % 10;
-    
-    return ValueAtPont(GridPointToWorldPoint(gridPoint));
+    float3 worldPos = GridPointToWorldPoint(gridPoint);
+    return ValueAtPont(worldPos) + sin(worldPos.y)/50 + clamp(sin(tan(worldPos.x)) / 100, 0, 100) + cos(worldPos.z)/50;
 }
 
 float ValueAtScreenPoint (float3 pos)

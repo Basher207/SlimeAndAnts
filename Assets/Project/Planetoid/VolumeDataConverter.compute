@@ -177,8 +177,8 @@ void MeshReconstruction(uint3 id : SV_DispatchThreadID)
 
         uint vidx = count * 3;
         WriteVertex(vidx + 0, vertices[e1], normals[e1], uvs[e1]);
-        WriteVertex(vidx + 1, vertices[e2], normals[e2], uvs[e1]);
-        WriteVertex(vidx + 2, vertices[e3], normals[e3], uvs[e1]);
+        WriteVertex(vidx + 1, vertices[e2], normals[e2], uvs[e2]);
+        WriteVertex(vidx + 2, vertices[e3], normals[e3], uvs[e3]);
         WriteIndices(vidx, uint3(vidx, vidx + 1, vidx + 2));
     }
 }
