@@ -540,7 +540,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9115523779242747696, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
       propertyPath: shaderVariables.Array.data[6].value
-      value: 0.02
+      value: 0.03
       objectReference: {fileID: 0}
     - target: {fileID: 9115523779242747696, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
       propertyPath: shaderVariables.Array.data[7].value
@@ -552,7 +552,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9115523779242747696, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
       propertyPath: shaderVariables.Array.data[9].value
-      value: 100000
+      value: 100
       objectReference: {fileID: 0}
     - target: {fileID: 9115523779242747696, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
       propertyPath: shaderVariables.Array.data[7].comment
