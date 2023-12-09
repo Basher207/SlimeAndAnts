@@ -8,7 +8,7 @@ using System.Collections.Generic;
 public class SocketServer : MonoBehaviour
 {
     // Define an event to signal when new data is received
-    public delegate void OnDataReceivedHandler(Dictionary<string, float> data);
+    public delegate void OnDataReceivedHandler(Dictionary<string, object> data);
     public static event OnDataReceivedHandler OnDataReceived;
 
     private TcpListener tcpListener;

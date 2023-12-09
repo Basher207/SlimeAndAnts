@@ -108,7 +108,7 @@ public class AntSimulationController : MonoBehaviour
         // Loop through the received data and update shaderVariables
         foreach (var item in data)
         {
-            if (item.value is float) {
+            if (item.Value is float) {
                 Debug.Log(item);
                 foreach (var shaderVar in shaderVariables)
                 {
@@ -116,12 +116,19 @@ public class AntSimulationController : MonoBehaviour
                     if (shaderVar.name == item.Key)
                     {
                         Debug.Log(shaderVar.name);
-                        shaderVar.value = item.Value;
+                        shaderVar.value = (float)item.Value;
                         break;
                     }
                 }
-            } else if (item.value is string) {
-                //Add texture shit
+            } else if (item.Value is string) {
+                //if biasTexture
+                if (item.Key == "biasTexture")
+                {
+                    // Load the image from file/url path
+                    Texture2D texture = new Texture2D(2, 2);
+                    texture.LoadImage(System.IO.File.ReadAllBytes((string)item.Value));
+                    biasTexture = texture;
+                }
             }
         }
     }
