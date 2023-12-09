@@ -60,12 +60,14 @@ public class AntSimulationController : MonoBehaviour
         SocketServer.OnDataReceived += UpdateShaderVariables;
 
         ReBuildTextureIfNeeded();
+
+        currentAspectRatio = Screen.width / (float)Screen.height;
         
         // Initialize the ant buffer
         ants = new Ant[numberOfAnts];
         for (int i = 0; i < numberOfAnts; i++)
         {
-            Vector2 position = new Vector2(0.5f, 0.5f) + Random.insideUnitCircle * 0.05f;
+            Vector2 position = new Vector2(currentAspectRatio * 0.5f, 0.5f) + Random.insideUnitCircle * 0.05f;
             float angle = Random.Range(-Mathf.PI, Mathf.PI);
             
             ants[i] = new Ant {
@@ -158,8 +160,9 @@ public class AntSimulationController : MonoBehaviour
             mousePos = new Vector2((float)trailMap.width / (float)trailMap.height, 1f) / 2f;
         }
             
-        computeShader.SetVector("mousePos", mousePos);
-        
+        //computeShader.SetVector("mousePos", mousePos);
+        computeShader.SetVector("mousePos", new Vector4(currentAspectRatio * 0.5f, 0.5f));
+
         
         int updateAntsKernel = computeShader.FindKernel("UpdateAnts");
         int drawAntsKernel = computeShader.FindKernel("DrawAnts");
