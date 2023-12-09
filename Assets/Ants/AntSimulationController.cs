@@ -102,22 +102,26 @@ public class AntSimulationController : MonoBehaviour
         materialToApplyTextureOn.mainTexture = trailMap;
     }
 
-    void UpdateShaderVariables(Dictionary<string, float> data)
+    void UpdateShaderVariables(Dictionary<string, object> data)
     {
         Debug.Log(data);
         // Loop through the received data and update shaderVariables
         foreach (var item in data)
         {
-            Debug.Log(item);
-            foreach (var shaderVar in shaderVariables)
-            {
-                Debug.Log(item.Key);
-                if (shaderVar.name == item.Key)
+            if (item.value is float) {
+                Debug.Log(item);
+                foreach (var shaderVar in shaderVariables)
                 {
-                    Debug.Log(shaderVar.name);
-                    shaderVar.value = item.Value;
-                    break;
+                    Debug.Log(item.Key);
+                    if (shaderVar.name == item.Key)
+                    {
+                        Debug.Log(shaderVar.name);
+                        shaderVar.value = item.Value;
+                        break;
+                    }
                 }
+            } else if (item.value is string) {
+                //Add texture shit
             }
         }
     }
