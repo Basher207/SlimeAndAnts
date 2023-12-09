@@ -102,6 +102,7 @@ public class AntSimulationController : MonoBehaviour
         materialToApplyTextureOn.mainTexture = trailMap;
     }
 
+    private string textureToLoad;
     void UpdateShaderVariables(List<SocketServer.Item> data)
     {
         Debug.Log(data);
@@ -112,10 +113,7 @@ public class AntSimulationController : MonoBehaviour
                 //if biasTexture
                 if (item.name == "biasTexture")
                 {
-                    // Load the image from file/url path
-                    Texture2D texture = new Texture2D(2, 2);
-                    texture.LoadImage(System.IO.File.ReadAllBytes((string)item.stringValue));
-                    biasTexture = texture;
+                    textureToLoad = item.stringValue;
                 }
             } else {
                 Debug.Log(item);
@@ -135,6 +133,13 @@ public class AntSimulationController : MonoBehaviour
 
     private void Update()
     {
+        if (!string.IsNullOrEmpty(textureToLoad))
+        {
+            // Load the image from file/url path
+            Texture2D texture = new Texture2D(2, 2);
+            texture.LoadImage(System.IO.File.ReadAllBytes((string)textureToLoad));
+            biasTexture = texture;
+        }
         ReBuildTextureIfNeeded();
     }
 
