@@ -249,7 +249,7 @@ float RotateTowardsCentre(Ant ant) {
     float targetAngle = atan2(toCentre.y, toCentre.x);
 
     float distanceForInwardsPressure = 0.35;
-    float inwardsPressure = fmap(distance, distanceForInwardsPressure, 0.48, 0, 0.09);
+    float inwardsPressure = fmap(distance, distanceForInwardsPressure, 0.48, 0, 0.06);
     inwardsPressure = clamp(inwardsPressure, 0, 1);
     
     // Use the RotateTowards function to gradually rotate the ant towards the centre
