@@ -108,7 +108,7 @@ public class AntSimulationController : MonoBehaviour
         // Loop through the received data and update shaderVariables
         foreach (var item in data)
         {
-            if (string.IsNullOrEmpty(item.stringValue)) {
+            if (!string.IsNullOrEmpty(item.stringValue)) {
                 //if biasTexture
                 if (item.name == "biasTexture")
                 {
