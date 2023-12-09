@@ -1,0 +1,409 @@
+
+//Names of our functions!
+
+#pragma kernel TextureDissipation
+#pragma kernel UpdateAnts
+#pragma kernel DrawAnts
+
+
+
+//////////////////////////////////////////////////////////
+//                                                      //
+//     Ant Behaviour and texture updates script :)!     //
+//////////////////////////////////////////////////////////
+
+
+
+
+
+//////////////////////////////////////////////////////////////
+//                                                          //
+//              PRE-PROCESSORS AND INCLUDES                 //
+//   We define what are the names of the functions that our //
+//                 CPU / C# script / Unity                  //
+//                    should call.                          //
+//////////////////////////////////////////////////////////////
+
+
+
+
+
+
+//////////////////////////////////////////////
+//                                          //
+//        PROPERTIES & DEFINITIONS          //
+//   How we organise the variables that we  //
+//              send from our               //
+//         CPU / C# script / Unity          //
+//                    |                     //
+//                    v                     //
+//////////////////////////////////////////////
+
+static const float PI = 3.14159265359;
+
+//Variables that exist per ant!
+//Currently our ant has a position (x/y position between 0 and 1)
+struct Ant {
+    float2 position;
+    float angle;
+};
+
+
+//Our trail map (picture we show on screen)
+//Has R-G-B-A colours, that's why its float4
+//RW means ReadWrite, which means that we can change this texture from here!
+RWTexture2D<float4> trailMap;
+
+//Ant buffer, our GPU storage where we store all our ants (Dont try this at home!) 
+//This is also a RW meaning its memory that the GPU can write and read from
+RWStructuredBuffer<Ant> antBuffer;
+
+//Bias texture
+Texture2D<float4> biasTexture;
+
+//Our properties! Variables that we are sending in from C#/Unity
+//To add more, simply create a new variable, then select the AntSimulationController in the scene
+//Then add a Shader Variable to the list of shader variables!  
+float time;
+float sensorAngle;
+float sensorPixelWidth;
+float rotationSpeed;
+float moveSpeed;
+
+float repulseScale;
+float attractionScale;
+float sensorDistance;
+
+int numberOfAnts;
+int2 textureSize;
+float2 positionRange;
+float aspectRatio;
+float centerPosX;
+float centerPosY;
+
+float biasTextureRepulsePower;
+int2 biasTextureSize;
+
+
+
+/////////////////////////////////////////////////////////////////////
+//                                                                 //
+//           SIMULATION SPACE TO TEXTURE SPACE MATH                //
+//              Our ants live in a 0 to 1 world!                   //
+//                                                                 //
+//            Where x/y = 0  is the left/bottom of the screen      //
+//            Where x/y = 1  is the right/top of the screen        //
+//                                                                 //
+//                   But the trail map is a texture!               //
+//           The texture has a resolution, for example 512, 512    //
+//                                                                 //
+//              When rendering, or when an ant is checking         //
+//                  what colour is under its position              //
+//                                                                 //
+//              We need to convert from/to texture space,          //
+//                      and back to position space                 //
+//                                                                 //
+//                                  |                              //
+//                                  v                              //
+/////////////////////////////////////////////////////////////////////
+
+//Takes a position, and returns that position wrapped around so that
+//x and y stay between 0 ... 1
+//For example:
+//-0.1 will become come 0.9
+//1.1 will become 0.1
+float2 Helper_WrapPosition(float2 position)
+{
+    //Hacky way to fix negative wrapping
+    return fmod(position + positionRange*1000, positionRange);
+}
+
+
+//Takes a pixel position, and returns that position wrapped around so that
+//x and y stay between 0 ... textureSize
+//For example:
+//pixelPosition.x = -10 will return pixelPosition.x = (textureSize - 10)
+int2 Helper_WrapPixel(int2 pixelPosition)
+{
+    return round((float2)pixelPosition / (float2)textureSize * (float2)textureSize);
+}
+
+int2 Helper_BiasTextureWrapPixel(int2 biasTexturePixelPosition)
+{
+    return round((float2)biasTexturePixelPosition / (float2)biasTextureSize * (float2)biasTextureSize);
+}
+
+int2 Helper_TexturePixelToBiasPixel(int2 texturePixel)
+{
+    return texturePixel / (textureSize / biasTextureSize);
+}
+
+//Takes a position, and converts it to the equivalent pixel coordinate 
+int2 Helper_PositionToPixel (float2 position)
+{
+    //Wraps position to make sure its between 0, and positionRange
+    position = Helper_WrapPosition(position);
+
+    int2 pixelPos =  round(position * textureSize.y);
+    return pixelPos;
+}
+
+//Takes a position, and converts it to the equivalent bias texture pixel coordinate 
+int2 Helper_PositionToBiasPixel (float2 position)
+{
+    //Wraps position to make sure its between 0, and positionRange
+    position = Helper_WrapPosition(position);
+
+    int2 pixelPos =  round(position * biasTextureSize.y);
+    return pixelPos;
+}
+
+////////////////////////////////////////////
+//                                        //
+//          HELPFUL MATH FUNCTIONS        //
+//   nice to have, general functions :)!  //
+//                     |                  //
+//                     v                  //
+////////////////////////////////////////////
+
+
+
+
+
+//Maps a vlaue from one range to another (e.g.   0...1   to  0...100)
+float fmap(float value, float inMin, float inMax, float outMin, float outMax)
+{
+    return outMin + ((value - inMin) / (inMax - inMin)) * (outMax - outMin);
+}
+
+
+
+//Random generation logic, generating a random number in a compute shader is weird x) 
+uint hash(uint state)
+{
+    state ^= 2747636419u;
+    state *= 2654435769u;
+    state ^= state >> 16;
+    state *= 2654435769u;
+    state ^= state >> 16;
+    state *= 2654435769u;
+    return state;
+}
+float scaleToRange01(uint state)
+{
+    return state / 4294967295.0;
+}
+//Returns a random number between 0 and 1
+float random01(int id, Ant ant)
+{
+    return scaleToRange01(hash(ant.position.y + time * textureSize.x + ant.position.x + hash(id.x + time * 100000)));
+}
+
+
+//////////////////////////////
+//                          //
+//   ANT LOGIC FUNCTIONS!   //
+//  Define how they behave  //
+//            |             //
+//            v             //
+//////////////////////////////
+
+
+
+
+//Ant looks infront and to the sides, of it, and to an angle! returns a sense value
+//A positive sense value will make the ant go towards it!
+//A negative sense value will make teh ant go away from it!
+//
+//"ant" is the ant in question!
+//"sensorAngleOffset" is the angle (in radians) that the ant will look off forward (angle relative to the forward of the ant!)
+float sense(Ant ant, float sensorAngleOffset) {
+
+    //Angle in world space (not relative to the ant anymore)
+    float angle = ant.angle + sensorAngleOffset;
+    
+    //Turn angle into a direction
+    float2 sensorDir = float2(cos(angle), sin(angle));
+
+    int2 sensorPixelPos = Helper_PositionToPixel(ant.position + (sensorDir * sensorDistance));
+    int sensorPixelCentreX = (int)sensorPixelPos.x;
+    int sensorPixelCentreY = (int)sensorPixelPos.y;
+    
+    int2 sensorBiasTexturePixelPos = Helper_PositionToBiasPixel(ant.position + (sensorDir * sensorDistance));
+    int sensorBiasTexturePixelCentreX = (int)sensorBiasTexturePixelPos.x;
+    int sensorBiasTexturePixelCentreY = (int)sensorBiasTexturePixelPos.y;
+
+    float attract = 0;
+    float repulse = 0;
+
+    // int4 senseWeight = agent.speciesMask * 2 - 1;
+    for (int offsetX = -sensorPixelWidth; offsetX <= sensorPixelWidth; offsetX ++) {
+        for (int offsetY = -sensorPixelWidth; offsetY <= sensorPixelWidth; offsetY ++) {
+            int2 pixelPos = Helper_WrapPixel(int2(sensorPixelCentreX + offsetX, sensorPixelCentreY + offsetY));
+            attract += trailMap[pixelPos].r;
+            repulse += trailMap[pixelPos].g;
+            
+            int2 biasPixelPos = Helper_TexturePixelToBiasPixel(pixelPos);
+            attract -= length(biasTexture[biasPixelPos].gb) * biasTextureRepulsePower;
+            repulse += length(biasTexture[biasPixelPos].r) * biasTextureRepulsePower;
+        }
+    }
+
+    return attract * attractionScale - repulse * repulseScale;
+}
+
+
+float RotateTowards(float angle, float target, float maxChange)
+{
+    float difference = target - angle;
+    // Normalize angle to -PI to PI range
+    difference = fmod(difference + PI, 2 * PI);
+    if (difference < 0)
+        difference += 2 * PI;
+    difference -= PI;
+
+    
+    // Clamp the difference with the max change
+    difference = clamp(difference, -maxChange, maxChange);
+
+    // Add difference to the original angle and normalize again
+    float newAngle = angle + difference;
+
+    newAngle = fmod(newAngle + PI, 2 * PI);
+    if (newAngle < 0)
+        newAngle += 2 * PI;
+    newAngle -= PI;
+
+    return newAngle;
+}
+float RotateTowardsCentre(Ant ant) {
+    // The center in normalized coordinates is (0,0)
+    float2 centre = float2(centerPosX * aspectRatio, centerPosY);//positionRange / 2;
+
+    // Compute the direction from the ant to the centre
+    float2 toCentre = centre - ant.position;
+    float distance = length(toCentre);
+    
+    // Compute the target angle using atan2, this gives us the angle from the ant to the centre
+    float targetAngle = atan2(toCentre.y, toCentre.x);
+
+    float distanceForInwardsPressure = 0.35;
+    float inwardsPressure = fmap(distance, distanceForInwardsPressure, 0.48, 0, 0.06);
+    inwardsPressure = clamp(inwardsPressure, 0, 1);
+    
+    // Use the RotateTowards function to gradually rotate the ant towards the centre
+    ant.angle = RotateTowards(ant.angle, targetAngle, inwardsPressure);
+
+    return ant.angle;
+}
+
+
+
+[numthreads(64,1,1)]
+void UpdateAnts (uint3 id : SV_DispatchThreadID) {
+    if (id.x >= numberOfAnts) return;
+
+    //Get the ant
+    Ant ant = antBuffer[id.x];
+
+    //Drunkess of the ant prevents ants from being too close to other ants.
+    float drunkness = trailMap[Helper_PositionToPixel(ant.position)].b;
+    float idrunkness = 1 - drunkness;
+
+    //Left sensor and right sensor, 
+    float leftSensorVal = sense(ant, sensorAngle) + random01(id.x, ant);
+    float rightSensorVal = sense(ant, -sensorAngle) + random01(id.x, ant);
+    //
+    float distanceFromCenter = length(ant.position);
+    
+    ant.angle += time * rotationSpeed * (leftSensorVal - rightSensorVal) * idrunkness * fmap(distanceFromCenter, 0, 1, 0, 1);// / fmap(drunkness, 0, 1, 1, 5);// ? 1 : 0);
+
+    float randomRotation = fmap(random01(id.x + 10, ant), 0, 1, -0.2, 0.2);
+    ant.angle += randomRotation * rotationSpeed * idrunkness * 0.1;
+    //
+    ant.angle = RotateTowardsCentre(ant);
+
+
+    
+    // Apply movement
+    float2 dir = float2(cos(ant.angle), sin(ant.angle));
+    
+    float speed = moveSpeed * max(0.3, length(biasTexture[Helper_PositionToBiasPixel(ant.position)]));
+    
+    ant.position += dir * time * speed * pow(fmap(drunkness, 0, 1, 1, 3), 2);
+    
+    ant.position = Helper_WrapPosition(ant.position);
+
+    antBuffer[id.x] = ant;
+}
+
+
+//////////////////////////////////////////////////
+//                                              //   
+//                  DRAW ANTS!                  //
+//        Draw the ants on the texture,         //
+//    & defines the trails they leave behind    //
+//                       |                      //
+//                       v                      //
+//////////////////////////////////////////////////
+
+[numthreads(64,1,1)]
+void DrawAnts (uint3 id : SV_DispatchThreadID) {
+    float4 biasColor = biasTexture[Helper_TexturePixelToBiasPixel(id.xy)];
+    
+    if (id.x < numberOfAnts) {
+        Ant ant = antBuffer[id.x];
+
+        // Convert normalized position to texture coordinates
+        int2 pos = Helper_PositionToPixel(ant.position);
+        
+        // Draw the ant onto the trail map
+        float4 newColor = float4(1, 0.3, 0.1, 1);
+        if (newColor.b > 0.8)
+        {
+            // newColor.r -= fmap(newColor.b, 0.8, 1, 0, 1);
+        }
+        newColor = clamp(newColor, 0, 1);
+        trailMap[pos] += newColor * max(1, (length(biasColor.rgb)/3)); // white color
+    }
+}
+
+
+
+
+
+//////////////////////////////////////////////////
+//                                              //   
+//              TEXTURE DISSIPATION             //
+//  Defines what happens to trails over time    //
+//                       |                      //
+//                       v                      //
+//////////////////////////////////////////////////
+
+[numthreads(8,8,1)]
+void TextureDissipation (uint3 id : SV_DispatchThreadID) {
+    float4 sum = float4(0, 0, 0, 0);
+    int count = 0;
+    
+    // Average the color of the surrounding pixels
+    for (int dx = -1; dx <= 1; dx++) {
+        for (int dy = -1; dy <= 1; dy++) {
+            int2 pos = Helper_WrapPixel(id.xy + int2(dx, dy));
+            
+            sum += trailMap[pos];
+            count++;
+        }
+    }
+
+    float4 newColor = float4(1,1,1,1);
+    
+    newColor.r = lerp(trailMap[id.xy].r, sum.r / count, 0.3) * 0.99;
+    newColor.g = lerp(trailMap[id.xy].g, sum.g / count, 0.1) * 0.97;
+    newColor.b = lerp(trailMap[id.xy].b, sum.b / count, 0.3) * 0.994;
+
+    // float4 biasColor = biasTexture[Helper_TexturePixelToBiasPixel(id.xy)];// / textureSize) * biasTextureSize];
+    
+    trailMap[id.xy] = newColor;//lerp(newColor, biasColor, 0.05);;
+    // Apply the average color
+}
+

@@ -43,8 +43,8 @@ public class AntSimulationController : MonoBehaviour
 
     [Header("Dont change at runtime")]
     public int numberOfAnts = 10000;
-    
-    
+
+    public Texture biasTexture;
     
     private ComputeBuffer antBuffer;
     private RenderTexture trailMap;
@@ -152,7 +152,12 @@ public class AntSimulationController : MonoBehaviour
         computeShader.SetInts("textureSize", new int[2] { trailMap.width, trailMap.height });
         computeShader.SetVector("positionRange",  new Vector2((float)trailMap.width / (float)trailMap.height, 1f));
         computeShader.SetFloat("aspectRatio", (float)trailMap.width / (float)trailMap.height);
-
+        
+        
+        if (biasTexture)
+        {
+            computeShader.SetInts("biasTextureSize", new int[2] { biasTexture.width, biasTexture.height});
+        }
 
         // Vector2 mousePos = Input.mousePosition / (float)Screen.height;
         // if (mousePos.x < 0f || mousePos.x > currentAspectRatio || mousePos.y < 0f || mousePos.y > 1f)
@@ -179,6 +184,11 @@ public class AntSimulationController : MonoBehaviour
 
     void UpdateComputeShaderKernelVariables(int kernelIndex)
     {
+        if (biasTexture)
+        {
+            computeShader.SetTexture(kernelIndex, "biasTexture", biasTexture);
+        }
+        
         computeShader.SetTexture(kernelIndex, "trailMap", trailMap);
         computeShader.SetBuffer(kernelIndex, "antBuffer", antBuffer);
     }
