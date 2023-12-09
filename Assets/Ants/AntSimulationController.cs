@@ -139,6 +139,8 @@ public class AntSimulationController : MonoBehaviour
             Texture2D texture = new Texture2D(2, 2);
             texture.LoadImage(System.IO.File.ReadAllBytes((string)textureToLoad));
             biasTexture = texture;
+
+            textureToLoad = null;
         }
         ReBuildTextureIfNeeded();
     }
