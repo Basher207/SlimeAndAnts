@@ -74,6 +74,9 @@ float sensorDistance;
 
 int numberOfAnts;
 int2 textureSize;
+float2 positionRange;
+float aspectRatio;
+float2 mousePos;
 
 
 /////////////////////////////////////////////////////////////////////
@@ -104,7 +107,8 @@ int2 textureSize;
 //1.1 will become 0.1
 float2 Helper_WrapPosition(float2 position)
 {
-    return fmod(position, float2(1,1));
+    //Hacky way to fix negative wrapping
+    return fmod(position + positionRange*1000, positionRange);
 }
 
 
@@ -120,10 +124,10 @@ int2 Helper_WrapPixel(int2 pixelPosition)
 //Takes a position, and converts it to the equivalent pixel coordinate 
 int2 Helper_PositionToPixel (float2 position)
 {
-    //Wraps position to make sure its between 0, and 1
+    //Wraps position to make sure its between 0, and positionRange
     position = Helper_WrapPosition(position);
-    
-    int2 pixelPos = round(position * textureSize);
+
+    int2 pixelPos =  round(position * textureSize.y);
     return pixelPos;
 }
 
@@ -239,7 +243,7 @@ float RotateTowards(float angle, float target, float maxChange)
 }
 float RotateTowardsCentre(Ant ant) {
     // The center in normalized coordinates is (0,0)
-    float2 centre = float2(0.5, 0.5);
+    float2 centre = mousePos;//positionRange / 2;
 
     // Compute the direction from the ant to the centre
     float2 toCentre = centre - ant.position;
@@ -311,7 +315,7 @@ void DrawAnts (uint3 id : SV_DispatchThreadID) {
         Ant ant = antBuffer[id.x];
 
         // Convert normalized position to texture coordinates
-        int2 pos = ant.position * textureSize;
+        int2 pos = Helper_PositionToPixel(ant.position);
         
         // Draw the ant onto the trail map
         float4 newColor = float4(1, 0.3, 0.1, 1);
