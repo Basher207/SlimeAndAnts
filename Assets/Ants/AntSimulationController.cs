@@ -154,14 +154,14 @@ public class AntSimulationController : MonoBehaviour
         computeShader.SetFloat("aspectRatio", (float)trailMap.width / (float)trailMap.height);
 
 
-        Vector2 mousePos = Input.mousePosition / (float)Screen.height;
-        if (mousePos.x < 0f || mousePos.x > currentAspectRatio || mousePos.y < 0f || mousePos.y > 1f)
-        {
-            mousePos = new Vector2((float)trailMap.width / (float)trailMap.height, 1f) / 2f;
-        }
+        // Vector2 mousePos = Input.mousePosition / (float)Screen.height;
+        // if (mousePos.x < 0f || mousePos.x > currentAspectRatio || mousePos.y < 0f || mousePos.y > 1f)
+        // {
+        //     mousePos = new Vector2((float)trailMap.width / (float)trailMap.height, 1f) / 2f;
+        // }
             
         //computeShader.SetVector("mousePos", mousePos);
-        computeShader.SetVector("mousePos", new Vector4(currentAspectRatio * 0.5f, 0.5f));
+        // computeShader.SetVector("mousePos", new Vector4(currentAspectRatio * 0.5f, 0.5f));
 
         
         int updateAntsKernel = computeShader.FindKernel("UpdateAnts");

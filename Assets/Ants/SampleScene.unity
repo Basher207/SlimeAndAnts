@@ -486,8 +486,36 @@ PrefabInstance:
       value: 100000
       objectReference: {fileID: 0}
     - target: {fileID: 9115523779242747696, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
+      propertyPath: shaderVariables.Array.size
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 9115523779242747696, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
+      propertyPath: shaderVariables.Array.data[7].name
+      value: centerPosX
+      objectReference: {fileID: 0}
+    - target: {fileID: 9115523779242747696, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
+      propertyPath: shaderVariables.Array.data[8].name
+      value: centerPosY
+      objectReference: {fileID: 0}
+    - target: {fileID: 9115523779242747696, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
       propertyPath: shaderVariables.Array.data[6].value
       value: 0.02
+      objectReference: {fileID: 0}
+    - target: {fileID: 9115523779242747696, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
+      propertyPath: shaderVariables.Array.data[7].value
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 9115523779242747696, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
+      propertyPath: shaderVariables.Array.data[8].value
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 9115523779242747696, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
+      propertyPath: shaderVariables.Array.data[7].comment
+      value: X component of the center of attraction
+      objectReference: {fileID: 0}
+    - target: {fileID: 9115523779242747696, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
+      propertyPath: shaderVariables.Array.data[8].comment
+      value: Y component of the center of attraction
       objectReference: {fileID: 0}
     - target: {fileID: 9115523779242747701, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
       propertyPath: m_Name

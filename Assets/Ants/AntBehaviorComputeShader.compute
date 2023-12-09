@@ -76,7 +76,8 @@ int numberOfAnts;
 int2 textureSize;
 float2 positionRange;
 float aspectRatio;
-float2 mousePos;
+float centerPosX;
+float centerPosY;
 
 
 /////////////////////////////////////////////////////////////////////
@@ -243,7 +244,7 @@ float RotateTowards(float angle, float target, float maxChange)
 }
 float RotateTowardsCentre(Ant ant) {
     // The center in normalized coordinates is (0,0)
-    float2 centre = mousePos;//positionRange / 2;
+    float2 centre = float2(centerPosX * aspectRatio, centerPosY);//positionRange / 2;
 
     // Compute the direction from the ant to the centre
     float2 toCentre = centre - ant.position;
