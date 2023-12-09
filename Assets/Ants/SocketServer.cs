@@ -8,7 +8,7 @@ using System.Collections.Generic;
 public class SocketServer : MonoBehaviour
 {
     // Define an event to signal when new data is received
-    public delegate void OnDataReceivedHandler(Dictionary<string, object> data);
+    public delegate void OnDataReceivedHandler(List<Item> data);
     public static event OnDataReceivedHandler OnDataReceived;
 
     private TcpListener tcpListener;
@@ -25,7 +25,8 @@ public class SocketServer : MonoBehaviour
     public class Item
     {
         public string name;
-        public object value;  // Changed from 'float' to 'object'
+        public string stringValue; 
+        public float numberValue; 
     }
 
     void Start()
@@ -71,27 +72,8 @@ public class SocketServer : MonoBehaviour
 
                             // Parse JSON string into a data wrapper
                             DataWrapper dataWrapper = JsonUtility.FromJson<DataWrapper>(jsonString);
-                            Debug.Log(dataWrapper.items.Count);
-
-                            // Convert the data wrapper into a dictionary
-                            Dictionary<string, object> data = new Dictionary<string, object>();
-                            foreach (var item in dataWrapper.items)
-                            {
-                                // Check if the value is a float or string and handle accordingly
-                                if (item.value is float)
-                                {
-                                    data[item.name] = (float)item.value;
-                                }
-                                else if (item.value is string)
-                                {
-                                    data[item.name] = item.value as string;
-                                }
-                                Debug.Log($"{item.name}: {data[item.name]}");
-                            }
-                            
-                            // Raise the OnDataReceived event
-                            // Note: You might need to change the event delegate to accept Dictionary<string, object>
-                            OnDataReceived?.Invoke(data);
+                            Debug.Log($"Received {dataWrapper.items.Count} items.");
+                            OnDataReceived?.Invoke(dataWrapper.items);
                             Debug.Log(jsonString);
                         }
                     }

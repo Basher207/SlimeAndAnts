@@ -102,32 +102,32 @@ public class AntSimulationController : MonoBehaviour
         materialToApplyTextureOn.mainTexture = trailMap;
     }
 
-    void UpdateShaderVariables(Dictionary<string, object> data)
+    void UpdateShaderVariables(List<SocketServer.Item> data)
     {
         Debug.Log(data);
         // Loop through the received data and update shaderVariables
         foreach (var item in data)
         {
-            if (item.Value is float) {
-                Debug.Log(item);
-                foreach (var shaderVar in shaderVariables)
-                {
-                    Debug.Log(item.Key);
-                    if (shaderVar.name == item.Key)
-                    {
-                        Debug.Log(shaderVar.name);
-                        shaderVar.value = (float)item.Value;
-                        break;
-                    }
-                }
-            } else if (item.Value is string) {
+            if (string.IsNullOrEmpty(item.stringValue)) {
                 //if biasTexture
-                if (item.Key == "biasTexture")
+                if (item.name == "biasTexture")
                 {
                     // Load the image from file/url path
                     Texture2D texture = new Texture2D(2, 2);
-                    texture.LoadImage(System.IO.File.ReadAllBytes((string)item.Value));
+                    texture.LoadImage(System.IO.File.ReadAllBytes((string)item.stringValue));
                     biasTexture = texture;
+                }
+            } else {
+                Debug.Log(item);
+                foreach (var shaderVar in shaderVariables)
+                {
+                    Debug.Log(item.numberValue);
+                    if (shaderVar.name == item.name)
+                    {
+                        Debug.Log(shaderVar.name);
+                        shaderVar.value = item.numberValue;
+                        break;
+                    }
                 }
             }
         }
