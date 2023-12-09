@@ -25,7 +25,7 @@ public class SocketServer : MonoBehaviour
     public class Item
     {
         public string name;
-        public float value;
+        public object value;  // Changed from 'float' to 'object'
     }
 
     void Start()
@@ -74,14 +74,23 @@ public class SocketServer : MonoBehaviour
                             Debug.Log(dataWrapper.items.Count);
 
                             // Convert the data wrapper into a dictionary
-                            Dictionary<string, float> data = new Dictionary<string, float>();
+                            Dictionary<string, object> data = new Dictionary<string, object>();
                             foreach (var item in dataWrapper.items)
                             {
-                                data[item.name] = item.value;
-                                Debug.Log(item.name);
+                                // Check if the value is a float or string and handle accordingly
+                                if (item.value is float)
+                                {
+                                    data[item.name] = (float)item.value;
+                                }
+                                else if (item.value is string)
+                                {
+                                    data[item.name] = item.value as string;
+                                }
+                                Debug.Log($"{item.name}: {data[item.name]}");
                             }
-
+                            
                             // Raise the OnDataReceived event
+                            // Note: You might need to change the event delegate to accept Dictionary<string, object>
                             OnDataReceived?.Invoke(data);
                             Debug.Log(jsonString);
                         }
