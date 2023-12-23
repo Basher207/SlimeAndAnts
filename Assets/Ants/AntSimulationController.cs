@@ -138,6 +138,9 @@ public class AntSimulationController : MonoBehaviour
             // Load the image from file/url path
             Texture2D texture = new Texture2D(2, 2);
             texture.LoadImage(System.IO.File.ReadAllBytes((string)textureToLoad));
+            
+            Destroy(biasTexture);
+            
             biasTexture = texture;
 
             textureToLoad = null;
@@ -215,6 +218,7 @@ public class AntSimulationController : MonoBehaviour
         antBuffer.Release();
         trailMap.Release();
         SocketServer.OnDataReceived -= UpdateShaderVariables;
+        Destroy(biasTexture);
     }
 
     private struct Ant {
