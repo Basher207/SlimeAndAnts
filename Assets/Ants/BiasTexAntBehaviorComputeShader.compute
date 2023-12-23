@@ -70,6 +70,10 @@ float sensorPixelWidth;
 float rotationSpeed;
 float moveSpeed;
 
+float maxInwardsPressure;
+float distInwardsPressureStart;
+float rangePressure;
+
 float repulseScale;
 float attractionScale;
 float sensorDistance;
@@ -288,7 +292,9 @@ float RotateTowardsCentre(Ant ant) {
     float targetAngle = atan2(toCentre.y, toCentre.x);
 
     float distanceForInwardsPressure = 0.35;
-    float inwardsPressure = fmap(distance, distanceForInwardsPressure, 0.48, 0, 0.06);
+    float inwardsPressure = fmap(distance, 
+                                 distInwardsPressureStart, distInwardsPressureStart + rangePressure, 
+                                 0, maxInwardsPressure);
     inwardsPressure = clamp(inwardsPressure, 0, 1);
     
     // Use the RotateTowards function to gradually rotate the ant towards the centre
