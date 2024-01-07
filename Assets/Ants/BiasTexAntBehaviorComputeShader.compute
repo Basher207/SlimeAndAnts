@@ -280,16 +280,48 @@ float RotateTowards(float angle, float target, float maxChange)
 
     return newAngle;
 }
+
+float distance_manhattan(float ratio, float2 vec) {
+    //float manhattan = abs(vec.x + vec.y);
+    float manhattan = abs(vec.y) * 2;
+    return (1.0 - ratio) * manhattan;
+}
+
+float distance_sinusoid(float scale, float2 vec) {
+
+    return sin(scale * length(vec)) * length(vec);
+}
+
+float clac_shit(float2 vec, float intercept, float slope) {
+    return abs(-slope * vec.x + vec.y - intercept) / sqrt(slope*slope + 1);
+}
+
+float2 closest_point(float2 vec, float intercept, float slope) {
+    float x2 = (vec.x + slope * vec.y - slope * intercept) / (1 + slope * slope);
+    float y2 = (slope * vec.x + slope * slope * vec.y + intercept) / (1 + slope * slope);
+
+    float2 newpoint = float2(x2, y2);
+    return vec - newpoint;
+}
+
 float RotateTowardsCentre(Ant ant) {
     // The center in normalized coordinates is (0,0)
     float2 centre = float2(centerPosX * aspectRatio, centerPosY);//positionRange / 2;
 
+    float slope = 1;
+
     // Compute the direction from the ant to the centre
     float2 toCentre = centre - ant.position;
-    float distance = length(toCentre);
+    // float distance = length(toCentre);
+    // float distance = distance_manhattan(0.0, toCentre);
+    float distance = clac_shit(toCentre, 0, slope);
     
     // Compute the target angle using atan2, this gives us the angle from the ant to the centre
     float targetAngle = atan2(toCentre.y, toCentre.x);
+    float2 dist_vec = closest_point(toCentre, 0, slope);
+    targetAngle = atan2(dist_vec.y, dist_vec.x);
+
+    //float targetAngle = atan2(toCentre.y, 0);
 
     float distanceForInwardsPressure = 0.35;
     float inwardsPressure = fmap(distance, 
