@@ -111,26 +111,38 @@ int2 biasTextureSize;
 //                                  v                              //
 /////////////////////////////////////////////////////////////////////
 
-//Takes a position, and returns that position wrapped around so that
-//x and y stay between 0 ... 1
-//For example:
-//-0.1 will become come 0.9
-//1.1 will become 0.1
+//Takes a position, and converts it to the equivalent pixel coordinate 
+int2 Helper_PositionToPixel (float2 position)
+{
+    int2 pixelPos =  round(position * textureSize.y);
+    return pixelPos;
+}
+float2 Helper_PixelToPosition (int2 pixelPos)
+{
+    float2 position = (float2)pixelPos / (float2)textureSize;
+    return position;
+}
+
 float2 Helper_WrapPosition(float2 position)
 {
-    //Hacky way to fix negative wrapping
-    return fmod(position + positionRange*1000, positionRange);
+    float2 center = float2(0.5 * aspectRatio, 0.5);
+    float2 deltaFromCenter = position - center;
+    float distanceFromCenter = length(deltaFromCenter);
+    
+    if (distanceFromCenter > 0.5) {
+        distanceFromCenter = fmod(distanceFromCenter, 0.5);
+        position = center - normalize(deltaFromCenter) * (0.5 - distanceFromCenter);
+    }
+    
+    return position;
 }
 
-
-//Takes a pixel position, and returns that position wrapped around so that
-//x and y stay between 0 ... textureSize
-//For example:
-//pixelPosition.x = -10 will return pixelPosition.x = (textureSize - 10)
 int2 Helper_WrapPixel(int2 pixelPosition)
 {
-    return round((float2)pixelPosition / (float2)textureSize * (float2)textureSize);
+    return pixelPosition;
+    return Helper_PositionToPixel(Helper_WrapPosition(Helper_PixelToPosition(pixelPosition)));
 }
+
 
 int2 Helper_BiasTextureWrapPixel(int2 biasTexturePixelPosition)
 {
@@ -143,13 +155,9 @@ int2 Helper_TexturePixelToBiasPixel(int2 texturePixel)
 }
 
 //Takes a position, and converts it to the equivalent pixel coordinate 
-int2 Helper_PositionToPixel (float2 position)
+int2 Helper_PositionToPixelWrapped (float2 position)
 {
-    //Wraps position to make sure its between 0, and positionRange
-    position = Helper_WrapPosition(position);
-
-    int2 pixelPos =  round(position * textureSize.y);
-    return pixelPos;
+    return Helper_WrapPixel(Helper_PositionToPixel(position));
 }
 
 //Takes a position, and converts it to the equivalent bias texture pixel coordinate 
@@ -229,7 +237,7 @@ float sense(Ant ant, float sensorAngleOffset) {
     //Turn angle into a direction
     float2 sensorDir = float2(cos(angle), sin(angle));
 
-    int2 sensorPixelPos = Helper_PositionToPixel(ant.position + (sensorDir * sensorDistance));
+    int2 sensorPixelPos = Helper_PositionToPixelWrapped(ant.position + (sensorDir * sensorDistance));
     int sensorPixelCentreX = (int)sensorPixelPos.x;
     int sensorPixelCentreY = (int)sensorPixelPos.y;
     
@@ -345,7 +353,7 @@ void UpdateAnts (uint3 id : SV_DispatchThreadID) {
     Ant ant = antBuffer[id.x];
 
     //Drunkess of the ant prevents ants from being too close to other ants.
-    float drunkness = trailMap[Helper_PositionToPixel(ant.position)].b;
+    float drunkness = trailMap[Helper_PositionToPixelWrapped(ant.position)].b;
     float idrunkness = 1 - drunkness;
 
     //Left sensor and right sensor, 
@@ -398,7 +406,7 @@ void DrawAnts (uint3 id : SV_DispatchThreadID) {
         Ant ant = antBuffer[id.x];
 
         // Convert normalized position to texture coordinates
-        int2 pos = Helper_PositionToPixel(ant.position);
+        int2 pos = Helper_PositionToPixelWrapped(ant.position);
         
         // Draw the ant onto the trail map
         float4 newColor = float4(1, 0.3, 0.1, 1);
