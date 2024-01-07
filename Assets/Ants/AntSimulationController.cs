@@ -105,7 +105,6 @@ public class AntSimulationController : MonoBehaviour
     private string textureToLoad;
     void UpdateShaderVariables(List<SocketServer.Item> data)
     {
-        Debug.Log(data);
         // Loop through the received data and update shaderVariables
         foreach (var item in data)
         {
@@ -116,13 +115,10 @@ public class AntSimulationController : MonoBehaviour
                     textureToLoad = item.stringValue;
                 }
             } else {
-                Debug.Log(item);
                 foreach (var shaderVar in shaderVariables)
                 {
-                    Debug.Log(item.numberValue);
                     if (shaderVar.name == item.name)
                     {
-                        Debug.Log(shaderVar.name);
                         shaderVar.value = item.numberValue;
                         break;
                     }
