@@ -524,7 +524,7 @@ PrefabInstance:
       objectReference: {fileID: 7200000, guid: 9018f82c75301449b99506afcd4817a5, type: 3}
     - target: {fileID: 9115523779242747696, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
       propertyPath: shaderVariables.Array.size
-      value: 13
+      value: 14
       objectReference: {fileID: 0}
     - target: {fileID: 9115523779242747696, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
       propertyPath: shaderVariables.Array.data[7].name
@@ -549,6 +549,10 @@ PrefabInstance:
     - target: {fileID: 9115523779242747696, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
       propertyPath: shaderVariables.Array.data[12].name
       value: rangePressure
+      objectReference: {fileID: 0}
+    - target: {fileID: 9115523779242747696, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
+      propertyPath: shaderVariables.Array.data[13].name
+      value: slope
       objectReference: {fileID: 0}
     - target: {fileID: 9115523779242747696, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
       propertyPath: shaderVariables.Array.data[6].value
@@ -579,6 +583,10 @@ PrefabInstance:
       value: 0.1
       objectReference: {fileID: 0}
     - target: {fileID: 9115523779242747696, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
+      propertyPath: shaderVariables.Array.data[13].value
+      value: 0.6
+      objectReference: {fileID: 0}
+    - target: {fileID: 9115523779242747696, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
       propertyPath: shaderVariables.Array.data[7].comment
       value: X component of the center of attraction
       objectReference: {fileID: 0}
@@ -600,6 +608,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9115523779242747696, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
       propertyPath: shaderVariables.Array.data[12].comment
+      value: Y component of the center of attraction
+      objectReference: {fileID: 0}
+    - target: {fileID: 9115523779242747696, guid: 53a749cecbf044acca5517c846a2f497, type: 3}
+      propertyPath: shaderVariables.Array.data[13].comment
       value: Y component of the center of attraction
       objectReference: {fileID: 0}
     - target: {fileID: 9115523779242747701, guid: 53a749cecbf044acca5517c846a2f497, type: 3}

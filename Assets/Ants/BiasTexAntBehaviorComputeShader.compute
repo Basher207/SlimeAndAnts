@@ -69,6 +69,7 @@ float sensorAngle;
 float sensorPixelWidth;
 float rotationSpeed;
 float moveSpeed;
+float slope;
 
 float maxInwardsPressure;
 float distInwardsPressureStart;
@@ -127,13 +128,31 @@ float2 Helper_WrapPosition(float2 position)
 {
     float2 center = float2(0.5 * aspectRatio, 0.5);
     float2 deltaFromCenter = position - center;
-    float distanceFromCenter = length(deltaFromCenter);
     
-    if (distanceFromCenter > 0.5) {
-        distanceFromCenter = fmod(distanceFromCenter, 0.5);
-        position = center - normalize(deltaFromCenter) * (0.5 - distanceFromCenter);
+    //float distanceFromCenter = length(deltaFromCenter);
+    
+    //if (distanceFromCenter > 0.5) {
+    //    distanceFromCenter = fmod(distanceFromCenter, 0.5);
+    //    position = center - normalize(deltaFromCenter) * (0.5 - distanceFromCenter);
+    //}
+    if (position.x > aspectRatio) {
+        position.x = 0;
+        position.y = 1 - position.y;
+    } 
+    if (position.x < 0) {
+        position.x = aspectRatio;
+        position.y = 1 - position.y;
     }
-    
+    if (position.y > 1) {
+        position.y = 0;
+        position.x = aspectRatio - position.x;
+    }
+    if (position.y < 0) {
+        position.y = 1;
+        position.x = aspectRatio - position.x;
+    }
+
+
     return position;
 }
 
@@ -315,8 +334,6 @@ float2 closest_point(float2 vec, float intercept, float slope) {
 float RotateTowardsCentre(Ant ant) {
     // The center in normalized coordinates is (0,0)
     float2 centre = float2(centerPosX * aspectRatio, centerPosY);//positionRange / 2;
-
-    float slope = 1;
 
     // Compute the direction from the ant to the centre
     float2 toCentre = centre - ant.position;
