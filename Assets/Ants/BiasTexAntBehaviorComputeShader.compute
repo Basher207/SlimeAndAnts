@@ -115,12 +115,15 @@ int2 biasTextureSize;
 //Takes a position, and converts it to the equivalent pixel coordinate 
 int2 Helper_PositionToPixel (float2 position)
 {
-    int2 pixelPos =  round(position * textureSize.y);
+    int2 pixelPos = round(position * textureSize.y);
     return pixelPos;
 }
+
 float2 Helper_PixelToPosition (int2 pixelPos)
 {
     float2 position = (float2)pixelPos / (float2)textureSize;
+    position.x *= aspectRatio;
+    
     return position;
 }
 
@@ -158,8 +161,34 @@ float2 Helper_WrapPosition(float2 position)
 
 int2 Helper_WrapPixel(int2 pixelPosition)
 {
+
+    if (pixelPosition.x >= textureSize.x) {
+        pixelPosition.x = pixelPosition.x - textureSize.x;
+        pixelPosition.y = (textureSize.y-1) - pixelPosition.y;
+    } else if (pixelPosition.x < 0) {
+        pixelPosition.x = textureSize.x + pixelPosition.x;
+        pixelPosition.y = (textureSize.y-1) - pixelPosition.y;
+    }
+
+    if (pixelPosition.y >= textureSize.y) {
+        pixelPosition.y = pixelPosition.y - textureSize.y;
+        pixelPosition.x = (textureSize.x-1) - pixelPosition.x;
+    } else if (pixelPosition.y < 0) {
+        pixelPosition.y = textureSize.y + pixelPosition.y;
+        pixelPosition.x = (textureSize.x-1) - pixelPosition.x;
+    }
+
     return pixelPosition;
-    return Helper_PositionToPixel(Helper_WrapPosition(Helper_PixelToPosition(pixelPosition)));
+    
+    // return pixelPosition;
+    float2 normPosition;
+    normPosition.x = (float)pixelPosition.x / ((float)textureSize.x-1);
+    normPosition.y = (float)pixelPosition.y / ((float)textureSize.y-1);
+    
+    
+    pixelPosition = (int2)(textureSize * frac(abs(normPosition)));
+    
+    return pixelPosition;//Helper_PositionToPixel(Helper_WrapPosition(Helper_PixelToPosition(pixelPosition)));
 }
 
 
